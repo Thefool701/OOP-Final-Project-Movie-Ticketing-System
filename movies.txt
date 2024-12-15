@@ -1,0 +1,5 @@
+Avengers: Endgame|Earth's mightiest heroes must stop Thanos.|avengers.jpeg|Cinema 1
+Mamma Mia|A musical about a young woman discovering her father's identity.|mammamia.jpeg|Cinema 2
+Titanic|A love story aboard the ill-fated ship.|titanic.jpeg|Cinema 3
+Lilo and Stitch|An unusual friendship between a girl and an alien creature.|liloandstitch.jpeg|Cinema 4
+The Matrix|A computer hacker learns from mysterious rebels about the true nature of his reality and his role in the war against its controllers.|matrix.jpeg|Cinema 5

@@ -3,8 +3,10 @@ import javax.swing.border.Border;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.io.FileWriter;
-import java.io.IOException;
+import java.io.*;
+import java.util.*;
+import java.util.List;
+import java.util.ArrayList;
 
 public class trial {
 
@@ -12,123 +14,349 @@ public class trial {
         // Create the main frame
         JFrame frame = new JFrame("Movie Ticket Booking System");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        frame.setSize(500, 700);
-        frame.setLayout(new BorderLayout(10, 10));
-        frame.getContentPane().setBackground(Color.WHITE);
+        frame.setSize(800, 900);
+        frame.setLayout(new BorderLayout());
+        frame.setResizable(false);
 
-        // Create a border for the frame
-        Border outerBorder = BorderFactory.createEmptyBorder(20, 20, 20, 20);
-        JPanel contentPanel = new JPanel(new GridLayout(10, 1, 5, 5));
-        contentPanel.setBorder(outerBorder);
-        frame.add(contentPanel, BorderLayout.CENTER);
+        // Panel for buttons at the top
+        JPanel topPanel = createTopPanel(frame);
 
-        // Dropdown for movies
-        JLabel movieLabel = new JLabel("Select a Movie:");
-        String[] movies = {"Avengers: Endgame", "Mamma Mia", "Titanic", "Lilo and Stitch"};
-        JComboBox<String> movieDropdown = new JComboBox<>(movies);
+        // Main panel with CardLayout for switching pages
+        JPanel mainPanel = new JPanel(new CardLayout());
 
-        // Movie poster label
-        JLabel posterLabel = new JLabel();
-        posterLabel.setHorizontalAlignment(SwingConstants.CENTER);
-        posterLabel.setIcon(new ImageIcon("avengers.jpeg")); // Default poster
+        // Create different page panels
+        JPanel homePanel = createHomePanel();
+        JPanel bookTicketPanel = createBookTicketPanel(mainPanel);
+        JPanel moviesPanel = createMoviesPanel();
+        JPanel snackBarPanel = createSnackBarPanel();
+        JPanel adminPanel = createAdminPanel();
 
-        // Movie description label
-        JLabel descriptionLabel = new JLabel("Earth's mightiest heroes must stop Thanos.", SwingConstants.CENTER);
+        // Add panels to the main panel with unique keys
+        mainPanel.add(homePanel, "HOME");
+        mainPanel.add(bookTicketPanel, "BOOK_MOVIE_TICKET");
+        mainPanel.add(moviesPanel, "MOVIES");
+        mainPanel.add(snackBarPanel, "SNACK_BAR");
+        mainPanel.add(adminPanel, "ADMIN");
 
-        // Add action listener to update poster and description
-        movieDropdown.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                String selectedMovie = (String) movieDropdown.getSelectedItem();
-                switch (selectedMovie) {
-                    case "Avengers: Endgame":
-                        posterLabel.setIcon(new ImageIcon("avengers.jpeg"));
-                        descriptionLabel.setText("Earth's mightiest heroes must stop Thanos.");
-                        break;
-                    case "Mamma Mia":
-                        posterLabel.setIcon(new ImageIcon("mammamia.jpeg"));
-                        descriptionLabel.setText("A musical about a young woman discovering her father's identity.");
-                        break;
-                    case "Titanic":
-                        posterLabel.setIcon(new ImageIcon("titanic.jpeg"));
-                        descriptionLabel.setText("A love story aboard the ill-fated ship.");
-                        break;
-                    case "Lilo and Stitch":
-                        posterLabel.setIcon(new ImageIcon("liloandstitch.jpeg"));
-                        descriptionLabel.setText("An unusual friendship between a girl and an alien creature.");
-                        break;
-                }
-            }
-        });
+        // Add navigation action listeners to buttons
+        addNavigationListeners(topPanel, mainPanel);
 
-        // Dropdown for time slots
-        JLabel timeLabel = new JLabel("Select a Time Slot:");
-        String[] times = {"10:00 AM", "1:00 PM", "4:00 PM", "7:00 PM"};
-        JComboBox<String> timeDropdown = new JComboBox<>(times);
-
-        // Spinner for number of tickets
-        JLabel ticketsLabel = new JLabel("Number of Tickets:");
-        SpinnerNumberModel spinnerModel = new SpinnerNumberModel(1, 1, 10, 1);
-        JSpinner ticketsSpinner = new JSpinner(spinnerModel);
-
-        // Book button
-        JButton bookButton = new JButton("Book Now");
-        JLabel confirmationLabel = new JLabel("", SwingConstants.CENTER);
-
-        // Action listener for the book button
-        bookButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                String selectedMovie = (String) movieDropdown.getSelectedItem();
-                String selectedTime = (String) timeDropdown.getSelectedItem();
-                int numberOfTickets = (int) ticketsSpinner.getValue();
-
-                String transaction = "Booked " + numberOfTickets + " ticket(s) for " + selectedMovie + " at " + selectedTime;
-                confirmationLabel.setText(transaction);
-
-                // Write transaction to a text file
-                try (FileWriter writer = new FileWriter("transactions.txt", true)) {
-                    writer.write(transaction + "\n");
-                } catch (IOException ioException) {
-                    ioException.printStackTrace();
-                }
-
-                // Generate invoice
-                generateInvoice(selectedMovie, selectedTime, numberOfTickets);
-            }
-
-            private void generateInvoice(String movie, String time, int tickets) {
-                JFrame invoiceFrame = new JFrame("Invoice");
-                invoiceFrame.setSize(300, 200);
-                invoiceFrame.setLayout(new GridLayout(4, 1));
-
-                JLabel movieLabel = new JLabel("Movie: " + movie);
-                JLabel timeLabel = new JLabel("Time: " + time);
-                JLabel ticketsLabel = new JLabel("Tickets: " + tickets);
-                JLabel thankYouLabel = new JLabel("Thank you for your booking!", SwingConstants.CENTER);
-
-                invoiceFrame.add(movieLabel);
-                invoiceFrame.add(timeLabel);
-                invoiceFrame.add(ticketsLabel);
-                invoiceFrame.add(thankYouLabel);
-
-                invoiceFrame.setVisible(true);
-            }
-        });
-
-        // Add components to the panel
-        contentPanel.add(movieLabel);
-        contentPanel.add(movieDropdown);
-        contentPanel.add(posterLabel);
-        contentPanel.add(descriptionLabel);
-        contentPanel.add(timeLabel);
-        contentPanel.add(timeDropdown);
-        contentPanel.add(ticketsLabel);
-        contentPanel.add(ticketsSpinner);
-        contentPanel.add(bookButton);
-        contentPanel.add(confirmationLabel);
+        // Add components to the frame
+        frame.add(topPanel, BorderLayout.NORTH);
+        frame.add(mainPanel, BorderLayout.CENTER);
 
         // Set frame visibility
         frame.setVisible(true);
+    }
+
+    private static JPanel createTopPanel(JFrame frame) {
+        JPanel topPanel = new JPanel();
+        topPanel.setLayout(new FlowLayout(FlowLayout.CENTER, 10, 10));
+        topPanel.setBackground(Color.LIGHT_GRAY);
+
+        // Create navigation buttons
+        String[] buttonLabels = {"HOME", "BOOK MOVIE TICKET", "MOVIES", "SNACK BAR", "ADMIN"};
+        for (String label : buttonLabels) {
+            JButton button = new JButton(label);
+            button.setActionCommand(label.replace(" ", "_"));
+            topPanel.add(button);
+        }
+
+        return topPanel;
+    }
+
+    private static void addNavigationListeners(JPanel topPanel, JPanel mainPanel) {
+        CardLayout cardLayout = (CardLayout) mainPanel.getLayout();
+
+        for (Component comp : topPanel.getComponents()) {
+            if (comp instanceof JButton) {
+                JButton button = (JButton) comp;
+                button.addActionListener(e -> cardLayout.show(mainPanel, e.getActionCommand()));
+            }
+        }
+    }
+
+    private static JPanel createHomePanel() {
+        JPanel homePanel = new JPanel();
+        homePanel.setBackground(Color.WHITE);
+        homePanel.add(new JLabel("Welcome to the Movie Ticket Booking System!"));
+        return homePanel;
+    }
+
+    private static JPanel createMoviesPanel() {
+        JPanel moviesPanel = new JPanel();
+        moviesPanel.setBackground(Color.WHITE);
+        moviesPanel.add(new JLabel("List of Movies"));
+        return moviesPanel;
+    }
+
+    private static JPanel createSnackBarPanel() {
+        JPanel snackBarPanel = new JPanel();
+        snackBarPanel.setBackground(Color.WHITE);
+        snackBarPanel.add(new JLabel("Snack Bar Menu"));
+        return snackBarPanel;
+    }
+
+    private static JPanel createAdminPanel() {
+        JPanel adminPanel = new JPanel();
+        adminPanel.setBackground(Color.WHITE);
+        adminPanel.add(new JLabel("Admin Dashboard"));
+        return adminPanel;
+    }
+
+    private static JPanel createBookTicketPanel(JPanel mainPanel) {
+    JPanel contentPanel = new JPanel(new GridLayout(9, 1, 5, 10));
+    contentPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+
+    // Read the list of movies from the file
+    List<Movie> movieList = readMoviesFromFile("movies.txt");
+    if (movieList.isEmpty()) {
+        contentPanel.add(new JLabel("No movies available."));
+        return contentPanel;
+    }
+
+    // Name Section
+    JLabel nameLabel = new JLabel("Enter your First and Last Name:");
+
+    // Panel for the text fields (aligned horizontally)
+    JPanel namePanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 0));
+    JTextField firstNameField = new JTextField("First", 12);
+    JTextField lastNameField = new JTextField("Last", 12);
+
+    // Add focus listeners for placeholders
+    firstNameField.addFocusListener(new java.awt.event.FocusAdapter() {
+        public void focusGained(java.awt.event.FocusEvent evt) {
+            if (firstNameField.getText().equals("First")) {
+                firstNameField.setText("");
+            }
+        }
+
+        public void focusLost(java.awt.event.FocusEvent evt) {
+            if (firstNameField.getText().isEmpty()) {
+                firstNameField.setText("First");
+            }
+        }
+    });
+
+    lastNameField.addFocusListener(new java.awt.event.FocusAdapter() {
+        public void focusGained(java.awt.event.FocusEvent evt) {
+            if (lastNameField.getText().equals("Last")) {
+                lastNameField.setText("");
+            }
+        }
+
+        public void focusLost(java.awt.event.FocusEvent evt) {
+            if (lastNameField.getText().isEmpty()) {
+                lastNameField.setText("Last");
+            }
+        }
+    });
+
+    namePanel.add(firstNameField);
+    namePanel.add(lastNameField);
+
+    // Movie Selection
+    JLabel movieLabel = new JLabel("Select a Movie:");
+    JComboBox<String> movieDropdown = new JComboBox<>();
+    for (Movie movie : movieList) {
+        movieDropdown.addItem(movie.getTitle());
+    }
+
+    JLabel posterLabel = new JLabel();
+    JLabel descriptionLabel = new JLabel();
+    updateMovieDetails(movieList.get(0), posterLabel, descriptionLabel);
+
+    movieDropdown.addActionListener(e -> {
+        String selectedMovie = (String) movieDropdown.getSelectedItem();
+        for (Movie movie : movieList) {
+            if (movie.getTitle().equals(selectedMovie)) {
+                updateMovieDetails(movie, posterLabel, descriptionLabel);
+            }
+        }
+    });
+
+    // Time Slot Selection
+    JLabel timeLabel = new JLabel("Select a Time Slot:");
+    String[] times = {"10:00 AM", "1:00 PM", "4:00 PM", "7:00 PM"};
+    JComboBox<String> timeDropdown = new JComboBox<>(times);
+
+    // Number of Tickets
+    JLabel ticketsLabel = new JLabel("Number of Tickets:");
+    SpinnerNumberModel spinnerModel = new SpinnerNumberModel(1, 1, 5, 1);
+    JSpinner ticketsSpinner = new JSpinner(spinnerModel);
+
+    // Book Button
+    JButton bookButton = new JButton("Next: Select Seats");
+    bookButton.addActionListener(e -> {
+        String selectedMovie = (String) movieDropdown.getSelectedItem();
+        String selectedTime = (String) timeDropdown.getSelectedItem();
+        int numTickets = (int) ticketsSpinner.getValue();
+        String firstName = firstNameField.getText().trim();
+        String lastName = lastNameField.getText().trim();
+
+        if (firstName.isEmpty() || lastName.isEmpty() || firstName.equals("First") || lastName.equals("Last")) {
+            JOptionPane.showMessageDialog(null, "Please enter your full name.", "Error", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        showSeatSelector(mainPanel, selectedMovie, selectedTime, numTickets, firstName, lastName, movieList);
+    });
+
+    // Add components to the content panel
+    contentPanel.add(nameLabel);
+    contentPanel.add(namePanel); // Add the name panel with aligned fields
+    contentPanel.add(movieLabel);
+    contentPanel.add(movieDropdown);
+    contentPanel.add(posterLabel);
+    contentPanel.add(descriptionLabel);
+    contentPanel.add(timeLabel);
+    contentPanel.add(timeDropdown);
+    contentPanel.add(ticketsLabel);
+    contentPanel.add(ticketsSpinner);
+    contentPanel.add(bookButton);
+
+    return contentPanel;
+}
+
+
+    private static void showSeatSelector(JPanel mainPanel, String movie, String time, int numTickets, String firstName, String lastName, List<Movie> movieList) {
+        JFrame seatFrame = new JFrame("Select Seats");
+        seatFrame.setSize(400, 450);
+        seatFrame.setLayout(new BorderLayout());
+
+        int rows = 5;
+        int cols = 5;
+        JPanel seatPanel = new JPanel(new GridLayout(rows, cols));
+        JButton[][] seatButtons = new JButton[rows][cols];
+        Set<String> selectedSeats = new HashSet<>();
+
+        for (int row = 0; row < rows; row++) {
+            for (int col = 0; col < cols; col++) {
+                String seatId = (char) ('A' + row) + String.valueOf(col + 1);
+                JButton seatButton = new JButton(seatId);
+                seatButton.setBackground(Color.GREEN);
+                seatButton.addActionListener(e -> {
+                    if (seatButton.getBackground() == Color.GREEN && selectedSeats.size() < numTickets) {
+                        seatButton.setBackground(Color.WHITE);
+                        selectedSeats.add(seatId);
+                    } else if (seatButton.getBackground() == Color.WHITE) {
+                        seatButton.setBackground(Color.GREEN);
+                        selectedSeats.remove(seatId);
+                    } else {
+                        JOptionPane.showMessageDialog(seatFrame, "You can only select up to " + numTickets + " seats.");
+                    }
+                });
+                seatButtons[row][col] = seatButton;
+                seatPanel.add(seatButton);
+            }
+        }
+
+        JButton finalizeButton = new JButton("Finalize Booking");
+        finalizeButton.addActionListener(e -> {
+            if (selectedSeats.size() == numTickets) {
+                showInvoice(movie, time, numTickets, firstName, lastName, new ArrayList<>(selectedSeats), movieList, mainPanel);
+                seatFrame.dispose();
+            } else {
+                JOptionPane.showMessageDialog(seatFrame, "Please select exactly " + numTickets + " seats.");
+            }
+        });
+
+        seatFrame.add(seatPanel, BorderLayout.CENTER);
+        seatFrame.add(finalizeButton, BorderLayout.SOUTH);
+        seatFrame.setVisible(true);
+    }
+
+    private static void updateMovieDetails(Movie movie, JLabel posterLabel, JLabel descriptionLabel) {
+        ImageIcon originalIcon = new ImageIcon(movie.getPoster());
+        Image scaledImage = originalIcon.getImage().getScaledInstance(500, 500, Image.SCALE_SMOOTH);
+        posterLabel.setIcon(new ImageIcon(scaledImage));
+        descriptionLabel.setText(movie.getDescription());
+    }
+
+    private static List<Movie> readMoviesFromFile(String filename) {
+        List<Movie> movieList = new ArrayList<>();
+        try (BufferedReader reader = new BufferedReader(new FileReader(filename))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                String[] parts = line.split("\\|");
+                if (parts.length == 4) {
+                    movieList.add(new Movie(parts[0], parts[1], parts[2], parts[3]));
+                }
+            }
+        } catch (IOException e) {
+            JOptionPane.showMessageDialog(null, "Error reading movie file.", "Error", JOptionPane.ERROR_MESSAGE);
+        }
+        return movieList;
+    }
+
+    private static void showInvoice(String movie, String time, int numTickets, String firstName, String lastName, List<String> selectedSeats, List<Movie> movieList, JPanel mainPanel) {
+        String cinema = movieList.stream().filter(m -> m.getTitle().equals(movie)).findFirst().map(Movie::getCinema).orElse("Unknown");
+
+        StringBuilder invoiceText = new StringBuilder();
+        invoiceText.append("Invoice for: ").append(firstName).append(" ").append(lastName).append("\n")
+                   .append("Movie: ").append(movie).append("\n")
+                   .append("Cinema: ").append(cinema).append("\n")
+                   .append("Time: ").append(time).append("\n")
+                   .append("Number of Tickets: ").append(numTickets).append("\n")
+                   .append("Seats: ").append(String.join(", ", selectedSeats)).append("\n")
+                   .append("Total Price: P ").append(numTickets * 250);
+
+        JTextArea invoiceArea = new JTextArea(invoiceText.toString());
+        invoiceArea.setEditable(false);
+        invoiceArea.setFont(new Font("Arial", Font.PLAIN, 14));
+
+        JButton finalizeButton = new JButton("Finalize");
+        finalizeButton.addActionListener(e -> {
+            JOptionPane.showMessageDialog(null, "Thank you for your purchase!", "Invoice Finalized", JOptionPane.INFORMATION_MESSAGE);
+            writeTransactionToFile(firstName, lastName, movie, cinema, time, numTickets, selectedSeats);
+            CardLayout cardLayout = (CardLayout) mainPanel.getLayout();
+            cardLayout.show(mainPanel, "HOME");
+        });
+
+        JPanel invoicePanel = new JPanel(new BorderLayout());
+        invoicePanel.add(new JScrollPane(invoiceArea), BorderLayout.CENTER);
+        invoicePanel.add(finalizeButton, BorderLayout.SOUTH);
+
+        JOptionPane.showMessageDialog(null, invoicePanel, "Invoice", JOptionPane.PLAIN_MESSAGE);
+    }
+
+    private static void writeTransactionToFile(String firstName, String lastName, String movie, String cinema, String time, int numTickets, List<String> selectedSeats) {
+        String transaction = String.format("%s %s | Movie: %s | Cinema: %s | Time: %s | Tickets: %d | Seats: %s\n",
+                firstName, lastName, movie, cinema, time, numTickets, String.join(", ", selectedSeats));
+        try (FileWriter writer = new FileWriter("transactions.txt", true)) {
+            writer.write(transaction);
+        } catch (IOException e) {
+            JOptionPane.showMessageDialog(null, "Error writing transaction to file.", "Error", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+    static class Movie {
+        private final String title;
+        private final String description;
+        private final String poster;
+        private final String cinema;
+
+        public Movie(String title, String description, String poster, String cinema) {
+            this.title = title;
+            this.description = description;
+            this.poster = poster;
+            this.cinema = cinema;
+        }
+
+        public String getTitle() {
+            return title;
+        }
+
+        public String getDescription() {
+            return description;
+        }
+
+        public String getPoster() {
+            return poster;
+        }
+
+        public String getCinema() {
+            return cinema;
+        }
     }
 }
