@@ -219,7 +219,7 @@ public class trial {
 }
 
 
-    private static void showSeatSelector(JPanel mainPanel, String movie, String time, int numTickets, String firstName, String lastName, List<Movie> movieList) {
+        private static void showSeatSelector(JPanel mainPanel, String movie, String time, int numTickets, String firstName, String lastName, List<Movie> movieList) {
         JFrame seatFrame = new JFrame("Select Seats");
         seatFrame.setSize(400, 450);
         seatFrame.setLayout(new BorderLayout());
@@ -229,12 +229,21 @@ public class trial {
         JPanel seatPanel = new JPanel(new GridLayout(rows, cols));
         JButton[][] seatButtons = new JButton[rows][cols];
         Set<String> selectedSeats = new HashSet<>();
+        Set<String> bookedSeats = getBookedSeats(movie, time); // Fetch booked seats from transaction.txt
 
         for (int row = 0; row < rows; row++) {
             for (int col = 0; col < cols; col++) {
                 String seatId = (char) ('A' + row) + String.valueOf(col + 1);
                 JButton seatButton = new JButton(seatId);
-                seatButton.setBackground(Color.GREEN);
+
+                // Disable button if the seat is already booked
+                if (bookedSeats.contains(seatId)) {
+                    seatButton.setBackground(Color.RED);
+                    seatButton.setEnabled(false);
+                } else {
+                    seatButton.setBackground(Color.GREEN);
+                }
+
                 seatButton.addActionListener(e -> {
                     if (seatButton.getBackground() == Color.GREEN && selectedSeats.size() < numTickets) {
                         seatButton.setBackground(Color.WHITE);
@@ -242,7 +251,7 @@ public class trial {
                     } else if (seatButton.getBackground() == Color.WHITE) {
                         seatButton.setBackground(Color.GREEN);
                         selectedSeats.remove(seatId);
-                    } else {
+                    } else if (seatButton.isEnabled()) {
                         JOptionPane.showMessageDialog(seatFrame, "You can only select up to " + numTickets + " seats.");
                     }
                 });
@@ -254,6 +263,7 @@ public class trial {
         JButton finalizeButton = new JButton("Finalize Booking");
         finalizeButton.addActionListener(e -> {
             if (selectedSeats.size() == numTickets) {
+                saveTransaction(movie, time, new ArrayList<>(selectedSeats)); // Save to transaction.txt
                 showInvoice(movie, time, numTickets, firstName, lastName, new ArrayList<>(selectedSeats), movieList, mainPanel);
                 seatFrame.dispose();
             } else {
@@ -265,6 +275,35 @@ public class trial {
         seatFrame.add(finalizeButton, BorderLayout.SOUTH);
         seatFrame.setVisible(true);
     }
+
+    // Helper method to get booked seats from transaction.txt
+    private static Set<String> getBookedSeats(String movie, String time) {
+        Set<String> bookedSeats = new HashSet<>();
+        try (BufferedReader br = new BufferedReader(new FileReader("transaction.txt"))) {
+            String line;
+            while ((line = br.readLine()) != null) {
+                String[] parts = line.split(",");
+                if (parts.length > 2 && parts[0].equals(movie) && parts[1].equals(time)) {
+                    bookedSeats.addAll(Arrays.asList(parts[2].split("\\s+"))); // Assumes seat IDs are space-separated
+                }
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return bookedSeats;
+    }
+
+    // Helper method to save transaction to transaction.txt
+    private static void saveTransaction(String movie, String time, List<String> selectedSeats) {
+        try (BufferedWriter bw = new BufferedWriter(new FileWriter("transaction.txt", true))) {
+            String seats = String.join(" ", selectedSeats);
+            bw.write(movie + "," + time + "," + seats);
+            bw.newLine();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
 
     private static void updateMovieDetails(Movie movie, JLabel posterLabel, JLabel descriptionLabel) {
         ImageIcon originalIcon = new ImageIcon(movie.getPoster());
