@@ -263,7 +263,6 @@ public class trial {
         JButton finalizeButton = new JButton("Finalize Booking");
         finalizeButton.addActionListener(e -> {
             if (selectedSeats.size() == numTickets) {
-                saveTransaction(movie, time, new ArrayList<>(selectedSeats)); // Save to transaction.txt
                 showInvoice(movie, time, numTickets, firstName, lastName, new ArrayList<>(selectedSeats), movieList, mainPanel);
                 seatFrame.dispose();
             } else {
@@ -276,33 +275,27 @@ public class trial {
         seatFrame.setVisible(true);
     }
 
-    // Helper method to get booked seats from transaction.txt
-    private static Set<String> getBookedSeats(String movie, String time) {
-        Set<String> bookedSeats = new HashSet<>();
-        try (BufferedReader br = new BufferedReader(new FileReader("transaction.txt"))) {
-            String line;
-            while ((line = br.readLine()) != null) {
-                String[] parts = line.split(",");
-                if (parts.length > 2 && parts[0].equals(movie) && parts[1].equals(time)) {
-                    bookedSeats.addAll(Arrays.asList(parts[2].split("\\s+"))); // Assumes seat IDs are space-separated
+  // Helper method to get booked seats from transactions.txt
+private static Set<String> getBookedSeats(String movie, String time) {
+    Set<String> bookedSeats = new HashSet<>();
+    try (BufferedReader br = new BufferedReader(new FileReader("transactions.txt"))) {
+        String line;
+        while ((line = br.readLine()) != null) {
+            if (line.contains("Movie: " + movie) && line.contains("Time: " + time)) {
+                String[] parts = line.split("\\|");
+                for (String part : parts) {
+                    if (part.trim().startsWith("Seats:")) {
+                        String seats = part.split(":", 2)[1].trim(); // Extract seats after "Seats:"
+                        bookedSeats.addAll(Arrays.asList(seats.split(",\\s*"))); // Split by ", " and add to set
+                    }
                 }
             }
-        } catch (IOException e) {
-            e.printStackTrace();
         }
-        return bookedSeats;
+    } catch (IOException e) {
+        e.printStackTrace();
     }
-
-    // Helper method to save transaction to transaction.txt
-    private static void saveTransaction(String movie, String time, List<String> selectedSeats) {
-        try (BufferedWriter bw = new BufferedWriter(new FileWriter("transaction.txt", true))) {
-            String seats = String.join(" ", selectedSeats);
-            bw.write(movie + "," + time + "," + seats);
-            bw.newLine();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
+    return bookedSeats;
+}
 
 
     private static void updateMovieDetails(Movie movie, JLabel posterLabel, JLabel descriptionLabel) {
