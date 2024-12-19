@@ -415,38 +415,61 @@ public static JPanel createMoviesPanel() {
     }
     
     
-        public static void updateMovieDetails(Movie movie, JLabel posterLabel, JLabel descriptionLabel) {
-            ImageIcon originalIcon = new ImageIcon(movie.getPoster());
-            Image scaledImage = originalIcon.getImage().getScaledInstance(500, 500, Image.SCALE_SMOOTH);
-            posterLabel.setIcon(new ImageIcon(scaledImage));
-            descriptionLabel.setText(movie.getDescription());
-
-            File imageFile = new File(movie.getPoster());
-                if (!imageFile.exists()) {
-                    System.out.println("Error: Poster file not found at " + movie.getPoster());
-                    posterLabel.setIcon(null);
+        private static void updateMovieDetails(Movie movie, JLabel posterLabel, JLabel descriptionLabel) {
+    descriptionLabel.setText("<html><strong>Description:</strong> " + movie.getDescription() + "<br>" +
+                             "<strong>Cinema:</strong> " + movie.getCinemaNumber() + "</html>");
+    // Load poster image if available
+    ImageIcon poster = new ImageIcon(movie.getPosterPath());
+    posterLabel.setIcon(new ImageIcon(poster.getImage().getScaledInstance(150, 200, Image.SCALE_SMOOTH)));
 }
 
 
 
-        }
-
        
-        public static List<Movie> readMoviesFromFile(String filename) {
-            List<Movie> movieList = new ArrayList<>();
-            try (BufferedReader reader = new BufferedReader(new FileReader(filename))) {
-                String line;
-                while ((line = reader.readLine()) != null) {
-                    String[] parts = line.split("\\|");
-                    if (parts.length == 4) {
-                        movieList.add(new Movie(parts[0], parts[1], parts[2], Integer.parseInt(parts[3])));
-                    }
-                }
-            } catch (IOException e) {
-                JOptionPane.showMessageDialog(null, "Error reading movie file.", "Error", JOptionPane.ERROR_MESSAGE);
+        private static List<Movie> readMoviesFromFile(String filePath) {
+    List<Movie> movies = new ArrayList<>();
+    boolean isNowShowing = false; // Flag to indicate if we're in the "Now Showing" section
+
+    try (BufferedReader reader = new BufferedReader(new FileReader(filePath))) {
+        String line;
+        while ((line = reader.readLine()) != null) {
+            line = line.trim(); // Remove leading/trailing whitespace
+            if (line.equalsIgnoreCase("NOW SHOWING")) {
+                isNowShowing = true; // Start processing movies under "Now Showing"
+                continue;
+            } else if (line.equalsIgnoreCase("COMING SOON")) {
+                isNowShowing = false; // Stop processing as we reach "Coming Soon"
+                break; // Exit the loop since no more "Now Showing" movies will appear
             }
-            return movieList;
+
+            if (isNowShowing && !line.isEmpty()) {
+                String[] parts = line.split("\\|");
+                if (parts.length >= 4) {  // Ensure we have at least 4 parts
+                    String title = parts[0];
+                    String description = parts[1];
+                    String posterPath = parts[2];
+                    int cinemaNumber;
+
+                    try {
+                        cinemaNumber = Integer.parseInt(parts[3].trim()); // Cinema number
+                    } catch (NumberFormatException e) {
+                        System.err.println("Invalid cinema number for movie: " + title);
+                        continue; // Skip this entry and continue with the next
+                    }
+
+                    movies.add(new Movie(title, description, posterPath, cinemaNumber));
+                } else {
+                    System.err.println("Invalid format for line: " + line);
+                }
+            }
         }
+    } catch (IOException e) {
+        e.printStackTrace();
+    }
+    return movies;
+}
+
+
     
         public static void showInvoice(String movie, String time, int numTickets, String firstName, String lastName, List<String> selectedSeats, List<Movie> movieList, JPanel mainPanel) {
             String cinema = movieList.stream().filter(m -> m.getTitle().equals(movie)).findFirst().map(Movie::getCinemaNumber).orElse(-1).toString();
@@ -490,56 +513,26 @@ public static JPanel createMoviesPanel() {
 
     }
 
-    static class Movie {
+     public static class Movie {
         private String title;
         private String description;
-        private String posterFilename;
+        private String posterPath;
         private int cinemaNumber;
-    
-        // Constructor
-        public Movie(String title, String description, String posterFilename, int cinemaNumber) {
+
+        public Movie(String title, String description, String posterPath, int cinemaNumber) {
             this.title = title;
             this.description = description;
-            this.posterFilename = posterFilename;
+            this.posterPath = posterPath;
             this.cinemaNumber = cinemaNumber;
         }
-    
-        // Getters and setters
-        public String getTitle() {
-            return title;
-        }
-    
-        public void setTitle(String title) {
-            this.title = title;
-        }
-    
-        public String getDescription() {
-            return description;
-        }
-    
-        public void setDescription(String description) {
-            this.description = description;
-        }
-    
-        public String getPosterFilename() {
-            return posterFilename;
-        }
-    
-        public void setPosterFilename(String posterFilename) {
-            this.posterFilename = posterFilename;
-        }
-    
-        public int getCinemaNumber() {
-            return cinemaNumber;
-        }
-    
-        public void setCinemaNumber(int cinemaNumber) {
-            this.cinemaNumber = cinemaNumber;
-        }
-    
-        public String getPoster() {
-            return posterFilename;
-        }
+
+        // Getters
+        public String getTitle() { return title; }
+        public String getDescription() { return description; }
+        public String getPosterPath() { return posterPath; }
+        public int getCinemaNumber() { return cinemaNumber; }
     }
-    
 }
+
+
+
