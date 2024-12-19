@@ -71,7 +71,9 @@ public class AdminDashboard extends JFrame {
         JButton addButton = new JButton("Add Movie");
         JButton editButton = new JButton("Edit Movie");
         JButton deleteButton = new JButton("Delete Movie");
+        JButton snackBarButton = new JButton("Snack Bar");
         JButton signOutButton = new JButton("Sign Out");
+        
 
         addButton.setBackground(new Color(128, 0, 0));
         addButton.setForeground(Color.WHITE);
@@ -79,13 +81,18 @@ public class AdminDashboard extends JFrame {
         editButton.setForeground(Color.WHITE);
         deleteButton.setBackground(new Color(128, 0, 0));
         deleteButton.setForeground(Color.WHITE);
+        snackBarButton.setBackground(new Color(128, 0, 0));  
+        snackBarButton.setForeground(Color.WHITE);
         signOutButton.setBackground(new Color(128, 0, 0));
         signOutButton.setForeground(Color.WHITE);
+        
 
         adminButtonPanel.add(addButton);
         adminButtonPanel.add(editButton);
         adminButtonPanel.add(deleteButton);
+        adminButtonPanel.add(snackBarButton);
         adminButtonPanel.add(signOutButton);
+        
 
         addButton.addActionListener(e -> showAddMovieForm(movieTable));
 
@@ -145,6 +152,8 @@ public class AdminDashboard extends JFrame {
         adminFrame.add(adminButtonPanel, BorderLayout.SOUTH);
 
         adminFrame.setVisible(true);
+
+        snackBarButton.addActionListener(e -> showSnackBarPanel());
     }
 
     public static void showAddMovieForm(JTable movieTable) {
@@ -415,4 +424,180 @@ public class AdminDashboard extends JFrame {
             this.cinemaNumber = cinemaNumber;
         }
     }
+
+    public static List<SnackItem> loadStockInventoryFromFile() {
+        List<SnackItem> snacks = new ArrayList<>();
+        try (BufferedReader reader = new BufferedReader(new FileReader("StockInventory.txt"))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                String[] snackData = line.split("\\|");
+                if (snackData.length == 4) {
+                    String name = snackData[0].trim();
+                    double price = Double.parseDouble(snackData[1].trim());
+                    int quantity = Integer.parseInt(snackData[2].trim());
+                    String category = snackData[3].trim();
+                    SnackItem snack = new SnackItem(name, price, quantity, category);
+                    snacks.add(snack);
+                }
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return snacks;
+    }
+
+    // Save the snack items back to the file
+    public static void saveStockInventoryToFile(List<SnackItem> snacks) {
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter("StockInventory.txt"))) {
+            for (SnackItem snack : snacks) {
+                writer.write(snack.getName() + " | " + snack.getPrice() + " | " + snack.getQuantity() + " | " + snack.getCategory());
+                writer.newLine();
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    // Method to show Snack Bar Panel (Admin adds/removes snack items)
+    public static void showSnackBarPanel() {
+        JFrame snackBarFrame = new JFrame("Snack Bar Admin");
+        snackBarFrame.setSize(600, 400);
+        snackBarFrame.setLayout(new BorderLayout());
+
+        // Create panel for the input form to add snacks
+        JPanel inputPanel = new JPanel(new GridLayout(5, 2));
+
+        JLabel snackLabel = new JLabel("Snack Item:");
+        JTextField snackField = new JTextField();
+        JLabel priceLabel = new JLabel("Price:");
+        JTextField priceField = new JTextField();
+        JLabel quantityLabel = new JLabel("Quantity:");
+        JTextField quantityField = new JTextField();
+        JLabel categoryLabel = new JLabel("Category:");
+        JTextField categoryField = new JTextField();
+
+        JButton addSnackButton = new JButton("Add Snack");
+        JButton removeSnackButton = new JButton("Remove Selected Snack");
+
+        inputPanel.add(snackLabel);
+        inputPanel.add(snackField);
+        inputPanel.add(priceLabel);
+        inputPanel.add(priceField);
+        inputPanel.add(quantityLabel);
+        inputPanel.add(quantityField);
+        inputPanel.add(categoryLabel);
+        inputPanel.add(categoryField);
+        inputPanel.add(addSnackButton);
+        inputPanel.add(removeSnackButton);
+
+        // Panel for displaying the snack inventory
+        JPanel inventoryPanel = new JPanel(new BorderLayout());
+        String[] columnNames = {"Snack", "Price", "Quantity", "Category"};
+        DefaultTableModel inventoryTableModel = new DefaultTableModel(columnNames, 0);
+        JTable inventoryTable = new JTable(inventoryTableModel);
+        JScrollPane inventoryScrollPane = new JScrollPane(inventoryTable);
+        inventoryPanel.add(inventoryScrollPane, BorderLayout.CENTER);
+
+        List<SnackItem> snacks = loadStockInventoryFromFile();
+        for (SnackItem snack : snacks) {
+            inventoryTableModel.addRow(new Object[]{snack.getName(), snack.getPrice(), snack.getQuantity(), snack.getCategory()});
+        }
+
+        addSnackButton.addActionListener(e -> {
+            String snackName = snackField.getText();
+            String priceText = priceField.getText();
+            String quantityText = quantityField.getText();
+            String category = categoryField.getText();
+
+            if (snackName.isEmpty() || priceText.isEmpty() || quantityText.isEmpty() || category.isEmpty()) {
+                JOptionPane.showMessageDialog(snackBarFrame, "All fields are required!", "Error", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+
+            try {
+                double price = Double.parseDouble(priceText);
+                int quantity = Integer.parseInt(quantityText);
+                SnackItem newSnack = new SnackItem(snackName, price, quantity, category);
+
+                snacks.add(newSnack);
+                saveStockInventoryToFile(snacks);
+
+                inventoryTableModel.addRow(new Object[]{newSnack.getName(), newSnack.getPrice(), newSnack.getQuantity(), newSnack.getCategory()});
+                JOptionPane.showMessageDialog(snackBarFrame, "Snack Added Successfully!");
+            } catch (NumberFormatException ex) {
+                JOptionPane.showMessageDialog(snackBarFrame, "Price and Quantity must be valid numbers.", "Error", JOptionPane.ERROR_MESSAGE);
+            }
+        });
+
+        removeSnackButton.addActionListener(e -> {
+            int selectedRow = inventoryTable.getSelectedRow();
+            if (selectedRow != -1) {
+                String snackName = (String) inventoryTable.getValueAt(selectedRow, 0);
+                int confirmation = JOptionPane.showConfirmDialog(snackBarFrame,
+                        "Are you sure you want to remove the snack:\n" + snackName, "Remove Snack", JOptionPane.YES_NO_OPTION);
+                if (confirmation == JOptionPane.YES_OPTION) {
+                    snacks.removeIf(snack -> snack.getName().equals(snackName));
+                    saveStockInventoryToFile(snacks);
+
+                    inventoryTableModel.removeRow(selectedRow);
+                    JOptionPane.showMessageDialog(snackBarFrame, "Snack Removed Successfully!");
+                }
+            } else {
+                JOptionPane.showMessageDialog(snackBarFrame, "Please select a snack to remove.");
+            }
+        });
+
+        snackBarFrame.add(inputPanel, BorderLayout.NORTH);
+        snackBarFrame.add(inventoryPanel, BorderLayout.CENTER);
+
+        snackBarFrame.setVisible(true);
+    }
+
+    // Snack Item class to represent each snack product
+    static class SnackItem {
+        private String name;
+        private double price;
+        private int quantity;
+        private String category;
+
+        public SnackItem(String name, double price, int quantity, String category) {
+            this.name = name;
+            this.price = price;
+            this.quantity = quantity;
+            this.category = category;
+        }
+
+        public String getName() {
+            return name;
+        }
+
+        public void setName(String name) {
+            this.name = name;
+        }
+
+        public double getPrice() {
+            return price;
+        }
+
+        public void setPrice(double price) {
+            this.price = price;
+        }
+
+        public int getQuantity() {
+            return quantity;
+        }
+
+        public void setQuantity(int quantity) {
+            this.quantity = quantity;
+        }
+
+        public String getCategory() {
+            return category;
+        }
+
+        public void setCategory(String category) {
+            this.category = category;
+        }
+    }
 }
+

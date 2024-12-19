@@ -1,10 +1,10 @@
-Hamburger | 55.0 | 197 | Snack
+Hamburger | 55.0 | 190 | Snack
 Royal | 25.0 | 73 | Drink
+Iced Tea | 25.0 | 50 | Drink
 Sprite | 20.0 | 99 | Drink
 Lemon Juice | 30.0 | 48 | Drink
-Chips | 30.0 | 198 | Snack
 Coca-cola | 20.0 | 100 | Drink
 Hotdogs | 60.0 | 141 | Snack
 Popcorn | 50.0 | 98 | Snack
 Chocolates | 40.0 | 300 | Snack
-Iced Tea | 25.0 | 50 | Drink
+Peanuts | 15.0 | 10 | Snack
