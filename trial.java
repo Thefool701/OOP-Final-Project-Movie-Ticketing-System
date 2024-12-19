@@ -31,6 +31,8 @@ JPanel moviesPanel = createMoviesPanel();  // This will automatically include mo
 frame.add(moviesPanel, BorderLayout.CENTER); // Add to frame if needed directly
 
 JPanel snackBarPanel = createSnackBarPanel();
+frame.add(snackBarPanel); // Add to frame if needed directly
+
 JPanel adminPanel = createAdminPanel(frame);
 
 // Add panels to the main panel with unique keys
@@ -123,12 +125,22 @@ public static JPanel createMoviesPanel() {
     return moviesPanel;
 }
 
-    public static JPanel createSnackBarPanel() {
-        JPanel snackBarPanel = new JPanel();
-        snackBarPanel.setBackground(Color.WHITE);
-        snackBarPanel.add(new JLabel("Snack Bar Menu"));
-        return snackBarPanel;
-    }
+public static JPanel createSnackBarPanel() {
+    // Create a panel to hold the SnackBar content
+    JPanel snackBarPanel = new JPanel();
+    snackBarPanel.setLayout(new BoxLayout(snackBarPanel, BoxLayout.Y_AXIS)); // Use BoxLayout for vertical stacking
+    snackBarPanel.setBackground(Color.WHITE);
+
+    // Add a label for the SnackBar header
+    snackBarPanel.add(new JLabel("Snack Bar"));
+
+    // Create and add the SnackBarPanel (which is a JPanel)
+    SnackBar.SnackBarPanel snackBarContentPanel = new SnackBar.SnackBarPanel(); // Create an instance of SnackBarPanel
+    snackBarPanel.add(snackBarContentPanel);
+
+    // Return the snackBarPanel, which now contains the SnackBar content
+    return snackBarPanel;
+}
     public static JPanel createAdminPanel(JFrame frame) {
         // Main panel with null layout for absolute positioning
         JPanel adminPanel = new JPanel();
@@ -533,6 +545,5 @@ public static JPanel createMoviesPanel() {
         public int getCinemaNumber() { return cinemaNumber; }
     }
 }
-
 
 
