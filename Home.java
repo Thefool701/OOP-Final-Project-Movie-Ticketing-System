@@ -1,7 +1,5 @@
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -35,6 +33,7 @@ public class Home extends JPanel {
         // Add a scroll pane for the movies
         JScrollPane scrollPane = new JScrollPane(moviesPanel);
         scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
+        scrollPane.getVerticalScrollBar().setUnitIncrement(16); // Fast and smooth scrolling
 
         // Combine the "Now Showing" label and movies in another container
         JPanel labelAndMoviesPanel = new JPanel(new BorderLayout());
@@ -49,14 +48,19 @@ public class Home extends JPanel {
     // Method to create a panel with movies
     public static JPanel createMoviesPanel(List<Movie> movies) {
         JPanel panel = new JPanel();
-        panel.setLayout(new GridLayout(0, 3, 15, 15)); // 3 columns, spacing of 15px
+        panel.setLayout(new GridLayout(0, 2, 15, 15)); // 2 columns, spacing of 15px
+        panel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10)); // Padding around the grid
 
         for (Movie movie : movies) {
             JPanel moviePanel = new JPanel();
             moviePanel.setLayout(new BorderLayout(5, 5));
+            moviePanel.setBorder(BorderFactory.createCompoundBorder(
+                    BorderFactory.createLineBorder(Color.LIGHT_GRAY, 1),
+                    BorderFactory.createEmptyBorder(10, 10, 10, 10))); // Thin rounded border
 
             // Add movie image
             JLabel imageLabel = new JLabel();
+            imageLabel.setHorizontalAlignment(SwingConstants.CENTER); // Center the poster
             ImageIcon imageIcon = new ImageIcon(movie.getPosterFilename());
             Image scaledImage = imageIcon.getImage().getScaledInstance(200, 300, Image.SCALE_SMOOTH);
             imageLabel.setIcon(new ImageIcon(scaledImage));
@@ -66,22 +70,6 @@ public class Home extends JPanel {
             JLabel titleLabel = new JLabel(movie.getTitle(), SwingConstants.CENTER);
             titleLabel.setFont(new Font("Arial", Font.BOLD, 14));
             moviePanel.add(titleLabel, BorderLayout.SOUTH);
-
-            JButton bookButton = new JButton("Book Ticket");
-            bookButton.setAlignmentX(Component.CENTER_ALIGNMENT);
-            bookButton.addActionListener(new ActionListener() {
-                @Override
-                public void actionPerformed(ActionEvent e) {
-                    // Show a confirmation message or open a ticket booking dialog
-                    JOptionPane.showMessageDialog(moviePanel,
-                            "You have selected " + movie.getTitle() + " for booking.");
-                }
-            });
-
-            JPanel buttonPanel = new JPanel();
-            buttonPanel.setBackground(Color.GRAY);
-            buttonPanel.add(bookButton);
-            moviePanel.add(buttonPanel, BorderLayout.SOUTH);
 
             // Add the movie panel to the main panel
             panel.add(moviePanel);
@@ -94,7 +82,7 @@ public class Home extends JPanel {
     public static List<Movie> loadMoviesFromFile() {
         List<Movie> movies = new ArrayList<>();
         boolean isComingSoonSection = false;
-        
+
         try (BufferedReader reader = new BufferedReader(new FileReader("movies.txt"))) {
             String line;
             while ((line = reader.readLine()) != null) {
