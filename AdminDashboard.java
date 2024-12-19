@@ -20,7 +20,7 @@ public class AdminDashboard extends JFrame {
             String line;
             while ((line = reader.readLine()) != null) {
                 String[] movieData = line.split("\\|");
-                if (movieData.length == 4) {
+                if (movieData.length == 7) {
                     String title = movieData[0];
                     String description = movieData[1];
                     String posterFilename = movieData[2];
@@ -160,98 +160,139 @@ public class AdminDashboard extends JFrame {
     }
 
     public static void showAddMovieForm(JTable movieTable) {
-        JFrame addMovieFrame = new JFrame("Add Movie");
-        addMovieFrame.setSize(400, 300);
-        addMovieFrame.setLayout(new GridLayout(6, 2));
+    JFrame addMovieFrame = new JFrame("Add Movie");
+    addMovieFrame.setSize(600, 500);
 
-        JLabel titleLabel = new JLabel("Movie Title:");
-        JTextField titleField = new JTextField();
-        JLabel descriptionLabel = new JLabel("Description:");
-        JTextArea descriptionArea = new JTextArea();
-        JLabel posterLabel = new JLabel("Poster Filename:");
-        JTextField posterField = new JTextField();
-        JLabel cinemaLabel = new JLabel("Cinema Number:");
-        JTextField cinemaField = new JTextField();
-        JLabel directorsLabel = new JLabel("Directors ");
-        JTextField directorsField = new JTextField();
-        JLabel writersLabel = new JLabel("Writers ");
-        JTextField writersField = new JTextField();
-        JLabel starsLabel = new JLabel("Stars: ");
-        JTextField starsField = new JTextField();
+    JPanel panel = new JPanel();
+    panel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+    GroupLayout layout = new GroupLayout(panel);
+    panel.setLayout(layout);
+    layout.setAutoCreateGaps(true);
+    layout.setAutoCreateContainerGaps(true);
 
-        JButton fileChooserButton = new JButton("Choose Poster");
-        fileChooserButton.addActionListener(e -> {
-            JFileChooser fileChooser = new JFileChooser();
-            fileChooser.setFileFilter(new javax.swing.filechooser.FileNameExtensionFilter("Image Files", "png", "jpeg", "jpg", "gif"));
-            int returnValue = fileChooser.showOpenDialog(null);
-            if (returnValue == JFileChooser.APPROVE_OPTION) {
-                File selectedFile = fileChooser.getSelectedFile();
-                posterField.setText(selectedFile.getName());
-            }
-        });
+    JLabel titleLabel = new JLabel("Movie Title:");
+    JTextField titleField = new JTextField();
 
-        JButton saveButton = new JButton("Save");
-        saveButton.addActionListener(e -> {
-            String title = titleField.getText();
-            String description = descriptionArea.getText();
-            String posterFilename = posterField.getText();
-            String directors = directorsField.getText();
-            String writers = writersField.getText();
-            String stars = starsField.getText();
-            
-            if (title.isEmpty() || description.isEmpty() || posterFilename.isEmpty() || cinemaField.getText().isEmpty() || directors.isEmpty() || writers.isEmpty() || stars.isEmpty()) {
-                JOptionPane.showMessageDialog(addMovieFrame, "All fields are required!", "Error", JOptionPane.ERROR_MESSAGE);
-                return;
-            }
-        
-            try {
-                int cinemaNumber = Integer.parseInt(cinemaField.getText());
-                Movie newMovie = new Movie(title, description, posterFilename, cinemaNumber, directors, writers, stars);
-                List<Movie> movies = loadMoviesFromFile();
-                movies.add(newMovie);
-                saveMoviesToFile(movies);
-                
-        
-                JOptionPane.showMessageDialog(addMovieFrame, "Movie Added Successfully!");
-        
-                updateMovieTable((DefaultTableModel) movieTable.getModel());
-                addMovieFrame.dispose();
-                adminFrame.dispose(); // Dispose of the admin dashboard window
-                showAdminScreen(); // Reload the Admin Dashboard
-               
-                
-        
-                // Relaunch trial.java
-                trial.disposeInstance();
-                trial.main(new String[]{});
-               
-            } catch (NumberFormatException ex) {
-                JOptionPane.showMessageDialog(addMovieFrame, "Cinema Number must be a valid number!", "Error", JOptionPane.ERROR_MESSAGE);
-            }
-        });
-        
-        
-        
+    JLabel descriptionLabel = new JLabel("Description:");
+    JTextArea descriptionArea = new JTextArea(3, 20);
+    JScrollPane descriptionScrollPane = new JScrollPane(descriptionArea);
 
-        addMovieFrame.add(titleLabel);
-        addMovieFrame.add(titleField);
-        addMovieFrame.add(descriptionLabel);
-        addMovieFrame.add(new JScrollPane(descriptionArea));
-        addMovieFrame.add(posterLabel);
-        addMovieFrame.add(posterField);
-        addMovieFrame.add(fileChooserButton);
-        addMovieFrame.add(cinemaLabel);
-        addMovieFrame.add(cinemaField);
-        addMovieFrame.add(directorsLabel);
-        addMovieFrame.add(directorsField);
-        addMovieFrame.add(writersLabel);
-        addMovieFrame.add(writersField);
-        addMovieFrame.add(starsLabel);
-        addMovieFrame.add(starsField);
-        addMovieFrame.add(saveButton);
+    JLabel posterLabel = new JLabel("Poster Filename:");
+    JTextField posterField = new JTextField();
+    JButton fileChooserButton = new JButton("Choose Poster");
+    fileChooserButton.addActionListener(e -> {
+        JFileChooser fileChooser = new JFileChooser();
+        fileChooser.setFileFilter(new javax.swing.filechooser.FileNameExtensionFilter("Image Files", "png", "jpeg", "jpg", "gif"));
+        int returnValue = fileChooser.showOpenDialog(null);
+        if (returnValue == JFileChooser.APPROVE_OPTION) {
+            File selectedFile = fileChooser.getSelectedFile();
+            posterField.setText(selectedFile.getName());
+        }
+    });
 
-        addMovieFrame.setVisible(true);
-    }
+    JLabel cinemaLabel = new JLabel("Cinema Number:");
+    JTextField cinemaField = new JTextField();
+
+    JLabel directorsLabel = new JLabel("Directors:");
+    JTextField directorsField = new JTextField();
+
+    JLabel writersLabel = new JLabel("Writers:");
+    JTextField writersField = new JTextField();
+
+    JLabel starsLabel = new JLabel("Stars:");
+    JTextField starsField = new JTextField();
+
+    JButton saveButton = new JButton("Save");
+    saveButton.addActionListener(e -> {
+        String title = titleField.getText();
+        String description = descriptionArea.getText();
+        String posterFilename = posterField.getText();
+        String directors = directorsField.getText();
+        String writers = writersField.getText();
+        String stars = starsField.getText();
+
+        if (title.isEmpty() || description.isEmpty() || posterFilename.isEmpty() || cinemaField.getText().isEmpty() || directors.isEmpty() || writers.isEmpty() || stars.isEmpty()) {
+            JOptionPane.showMessageDialog(addMovieFrame, "All fields are required!", "Error", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        try {
+            int cinemaNumber = Integer.parseInt(cinemaField.getText());
+            Movie newMovie = new Movie(title, description, posterFilename, cinemaNumber, directors, writers, stars);
+            List<Movie> movies = loadMoviesFromFile();
+            movies.add(newMovie);
+            saveMoviesToFile(movies);
+
+            JOptionPane.showMessageDialog(addMovieFrame, "Movie Added Successfully!");
+
+            updateMovieTable((DefaultTableModel) movieTable.getModel());
+            addMovieFrame.dispose();
+            adminFrame.dispose(); // Dispose of the admin dashboard window
+            showAdminScreen(); // Reload the Admin Dashboard
+
+            // Relaunch trial.java
+            trial.disposeInstance();
+            trial.main(new String[]{});
+        } catch (NumberFormatException ex) {
+            JOptionPane.showMessageDialog(addMovieFrame, "Cinema Number must be a valid number!", "Error", JOptionPane.ERROR_MESSAGE);
+        }
+    });
+
+    layout.setHorizontalGroup(
+        layout.createParallelGroup(GroupLayout.Alignment.LEADING)
+            .addGroup(layout.createSequentialGroup()
+                .addGroup(layout.createParallelGroup(GroupLayout.Alignment.LEADING, false)
+                    .addComponent(titleLabel)
+                    .addComponent(descriptionLabel)
+                    .addComponent(posterLabel)
+                    .addComponent(cinemaLabel)
+                    .addComponent(directorsLabel)
+                    .addComponent(writersLabel)
+                    .addComponent(starsLabel))
+                .addGroup(layout.createParallelGroup(GroupLayout.Alignment.LEADING)
+                    .addComponent(titleField)
+                    .addComponent(descriptionScrollPane)
+                    .addGroup(layout.createSequentialGroup()
+                        .addComponent(posterField)
+                        .addComponent(fileChooserButton))
+                    .addComponent(cinemaField)
+                    .addComponent(directorsField)
+                    .addComponent(writersField)
+                    .addComponent(starsField)))
+            .addComponent(saveButton, GroupLayout.Alignment.TRAILING)
+    );
+
+    layout.setVerticalGroup(
+        layout.createSequentialGroup()
+            .addGroup(layout.createParallelGroup(GroupLayout.Alignment.BASELINE)
+                .addComponent(titleLabel)
+                .addComponent(titleField))
+            .addGroup(layout.createParallelGroup(GroupLayout.Alignment.BASELINE)
+                .addComponent(descriptionLabel)
+                .addComponent(descriptionScrollPane))
+            .addGroup(layout.createParallelGroup(GroupLayout.Alignment.BASELINE)
+                .addComponent(posterLabel)
+                .addComponent(posterField)
+                .addComponent(fileChooserButton))
+            .addGroup(layout.createParallelGroup(GroupLayout.Alignment.BASELINE)
+                .addComponent(cinemaLabel)
+                .addComponent(cinemaField))
+            .addGroup(layout.createParallelGroup(GroupLayout.Alignment.BASELINE)
+                .addComponent(directorsLabel)
+                .addComponent(directorsField))
+            .addGroup(layout.createParallelGroup(GroupLayout.Alignment.BASELINE)
+                .addComponent(writersLabel)
+                .addComponent(writersField))
+            .addGroup(layout.createParallelGroup(GroupLayout.Alignment.BASELINE)
+                .addComponent(starsLabel)
+                .addComponent(starsField))
+            .addComponent(saveButton)
+    );
+
+    addMovieFrame.add(panel);
+    addMovieFrame.setVisible(true);
+}
+
 
     public static void showEditMovieForm(Movie movie, JTable movieTable) {
         JFrame editMovieFrame = new JFrame("Edit Movie");
