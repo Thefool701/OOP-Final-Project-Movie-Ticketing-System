@@ -147,9 +147,10 @@ public class AdminDashboard extends JFrame {
 
         signOutButton.addActionListener(e -> {
             adminFrame.dispose();
+            trial.disposeInstance();
             trial.main(new String[]{});
         });
-
+s
         adminFrame.add(headerPanel, BorderLayout.NORTH);
         adminFrame.add(moviePanel, BorderLayout.CENTER);
         adminFrame.add(adminButtonPanel, BorderLayout.SOUTH);
