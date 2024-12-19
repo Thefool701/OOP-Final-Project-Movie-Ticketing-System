@@ -6,30 +6,13 @@ import java.io.*;
 import java.util.*;
 import java.time.LocalDateTime;
 
-public class SnackBar {
-
-    public static void main(String[] args) {
-        SwingUtilities.invokeLater(() -> {
-            JFrame frame = new JFrame("Snack Bar");
-            frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-            frame.setSize(800, 900);
-
-            JTabbedPane tabbedPane = new JTabbedPane();
-
-            SnackBarPanel snackBarPanel = new SnackBarPanel();
-            tabbedPane.addTab("Snack Bar", snackBarPanel);
-
-            frame.add(tabbedPane);
-            frame.setVisible(true);
-        });
-    }
-
+public class SnackBar extends JPanel {
     public static class SnackBarPanel extends JPanel {
-        private DefaultTableModel cartTableModel;
-        private DefaultTableModel stockTableModel;
-        private JLabel totalLabel;
-        private double total;
-        private Map<String, Item> inventory;
+        public DefaultTableModel cartTableModel;
+        public DefaultTableModel stockTableModel;
+        public JLabel totalLabel;
+        public double total;
+        public Map<String, Item> inventory;
 
         public SnackBarPanel() {
             setLayout(new BorderLayout());
@@ -37,13 +20,13 @@ public class SnackBar {
             initializeUI();
         }
 
-        private void loadInventory() {
+        public void loadInventory() {
             inventory = new HashMap<>();
             try (BufferedReader reader = new BufferedReader(new FileReader("StockInventory.txt"))) {
                 String line;
                 while ((line = reader.readLine()) != null) {
                     if (!line.isBlank()) {
-                        String[] parts = line.split(" \\| "); // Adjusted to match new format
+                        String[] parts = line.split(" \\| ");
                         if (parts.length == 4) {
                             String itemName = parts[0].trim();
                             double price = Double.parseDouble(parts[1].trim());
@@ -58,7 +41,7 @@ public class SnackBar {
             }
         }
 
-        private void updateInventoryFile() {
+        public void updateInventoryFile() {
             try (BufferedWriter writer = new BufferedWriter(new FileWriter("StockInventory.txt"))) {
                 for (Item item : inventory.values()) {
                     writer.write(item.name + " | " + item.price + " | " + item.quantity + " | " + item.category + "\n");
@@ -68,7 +51,7 @@ public class SnackBar {
             }
         }
 
-        private void initializeUI() {
+        public void initializeUI() {
             JLabel title = new JLabel("Snack Bar System", JLabel.CENTER);
             title.setFont(new Font("Arial", Font.BOLD, 24));
             add(title, BorderLayout.NORTH);
@@ -206,49 +189,51 @@ public class SnackBar {
             add(centerPanel, BorderLayout.CENTER);
         }
 
-        private void updateStockTable() {
+        public void updateStockTable() {
             stockTableModel.setRowCount(0);
             inventory.forEach((item, details) -> stockTableModel.addRow(new Object[]{item, details.quantity}));
         }
 
-        private String[] getSnacks() {
+        public String[] getSnacks() {
             return inventory.values().stream()
                     .filter(item -> item.category.equalsIgnoreCase("Snack"))
                     .map(item -> item.name)
                     .toArray(String[]::new);
         }
 
-        private String[] getDrinks() {
+        public String[] getDrinks() {
             return inventory.values().stream()
                     .filter(item -> item.category.equalsIgnoreCase("Drink"))
                     .map(item -> item.name)
                     .toArray(String[]::new);
         }
 
-        // Log transaction in SnackBarTransaction.txt
-        private void logTransaction(String receipt) {
-            try (BufferedWriter writer = new BufferedWriter(new FileWriter("SnackBarTransaction.txt", true))) {
-                writer.write("Transaction on " + LocalDateTime.now() + "\n");
-                writer.write(receipt);
-                writer.write("Total: Php " + String.format("%.2f", total) + "\n");
-                writer.write("---------------------------------------------------\n");
+        public void logTransaction(String receiptDetails) {
+            try (BufferedWriter writer = new BufferedWriter(new FileWriter("transaction_log.txt", true))) {
+                writer.write(LocalDateTime.now() + "\n");
+                writer.write(receiptDetails);
+                writer.write("--------------------------------------------------\n");
             } catch (IOException e) {
-                System.out.println("Error saving transaction log: " + e.getMessage());
+                JOptionPane.showMessageDialog(this, "Error logging transaction: " + e.getMessage());
+            }
+        }
+
+        public class Item {
+            String name;
+            double price;
+            int quantity;
+            String category;
+
+            public Item(String name, double price, int quantity, String category) {
+                this.name = name;
+                this.price = price;
+                this.quantity = quantity;
+                this.category = category;
             }
         }
     }
 
-    static class Item {
-        String name;
-        double price;
-        int quantity;
-        String category;
-
-        Item(String name, double price, int quantity, String category) {
-            this.name = name;
-            this.price = price;
-            this.quantity = quantity;
-            this.category = category;
-        }
+    public static JPanel createSnackBarPanel() {
+        return new SnackBarPanel();
     }
 }
