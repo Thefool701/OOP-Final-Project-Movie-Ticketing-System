@@ -107,7 +107,7 @@ public class AdminDashboard extends JFrame {
             } else {
                 JOptionPane.showMessageDialog(adminFrame, "Please select a movie to edit.");
             }
-        });
+        }); 
 
         deleteButton.addActionListener(e -> {
             int selectedRow = movieTable.getSelectedRow();
@@ -294,136 +294,185 @@ public class AdminDashboard extends JFrame {
 }
 
 
-    public static void showEditMovieForm(Movie movie, JTable movieTable) {
-        JFrame editMovieFrame = new JFrame("Edit Movie");
-        editMovieFrame.setSize(400, 400);
-        editMovieFrame.setLayout(new GridLayout(6, 2));
+public static void showEditMovieForm(Movie movie, JTable movieTable) { 
+    JFrame editMovieFrame = new JFrame("Edit Movie");
+    editMovieFrame.setSize(600, 500);
     
-        JLabel titleLabel = new JLabel("Movie Title:");
-        JTextField titleField = new JTextField(movie.getTitle());
-        JLabel descriptionLabel = new JLabel("Description:");
-        JTextArea descriptionArea = new JTextArea(movie.getDescription());
-        JLabel posterLabel = new JLabel("Poster Filename:");
-        JTextField posterField = new JTextField(movie.getPosterFilename());
-        JLabel cinemaLabel = new JLabel("Cinema Number:");
-        JTextField cinemaField = new JTextField(String.valueOf(movie.getCinemaNumber()));
-        JLabel directorsLabel = new JLabel("Directors");
-        JTextField directorsField = new JTextField(movie.getDirector());
-        JLabel writersLabel = new JLabel("Writers");
-        JTextField writersField = new JTextField(movie.getWriters());
-        JLabel starsLabel = new JLabel("Actors");
-        JTextField starsField = new JTextField(movie.getStars());
+    JPanel panel = new JPanel();
+    panel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+    GroupLayout layout = new GroupLayout(panel);
+    panel.setLayout(layout);
+    layout.setAutoCreateGaps(true);
+    layout.setAutoCreateContainerGaps(true);
+
+    JLabel titleLabel = new JLabel("Movie Title:");
+    JTextField titleField = new JTextField(movie.getTitle());
     
-        JButton fileChooserButton = new JButton("Choose Poster");
-        fileChooserButton.addActionListener(e -> {
-            JFileChooser fileChooser = new JFileChooser();
-            fileChooser.setFileFilter(new javax.swing.filechooser.FileNameExtensionFilter("Image Files", "png", "jpeg", "jpg", "gif"));
-            int returnValue = fileChooser.showOpenDialog(null);
-            if (returnValue == JFileChooser.APPROVE_OPTION) {
-                File selectedFile = fileChooser.getSelectedFile();
-                posterField.setText(selectedFile.getName());
-            }
-        });
+    JLabel descriptionLabel = new JLabel("Description:");
+    JTextArea descriptionArea = new JTextArea(movie.getDescription(), 3, 20);
+    JScrollPane descriptionScrollPane = new JScrollPane(descriptionArea);
     
-        JButton saveButton = new JButton("Save Changes");
-        saveButton.addActionListener(e -> {
-            // Store the original movie title before editing
-            String originalTitle = movie.getTitle();
+    JLabel posterLabel = new JLabel("Poster Filename:");
+    JTextField posterField = new JTextField(movie.getPosterFilename());
     
-            // Update only the changed fields
-            boolean updated = false;
-            if (!titleField.getText().equals(movie.getTitle())) {
-                movie.setTitle(titleField.getText());
+    JLabel cinemaLabel = new JLabel("Cinema Number:");
+    JTextField cinemaField = new JTextField(String.valueOf(movie.getCinemaNumber()));
+    
+    JLabel directorsLabel = new JLabel("Directors");
+    JTextField directorsField = new JTextField(movie.getDirector());
+    
+    JLabel writersLabel = new JLabel("Writers");
+    JTextField writersField = new JTextField(movie.getWriters());
+    
+    JLabel starsLabel = new JLabel("Actors");
+    JTextField starsField = new JTextField(movie.getStars());
+    
+    JButton fileChooserButton = new JButton("Choose Poster");
+    fileChooserButton.addActionListener(e -> {
+        JFileChooser fileChooser = new JFileChooser();
+        fileChooser.setFileFilter(new javax.swing.filechooser.FileNameExtensionFilter("Image Files", "png", "jpeg", "jpg", "gif"));
+        int returnValue = fileChooser.showOpenDialog(null);
+        if (returnValue == JFileChooser.APPROVE_OPTION) {
+            File selectedFile = fileChooser.getSelectedFile();
+            posterField.setText(selectedFile.getName());
+        }
+    });
+
+    JButton saveButton = new JButton("Save Changes");
+    saveButton.addActionListener(e -> {
+        // Store the original movie title before editing
+        String originalTitle = movie.getTitle();
+
+        // Update only the changed fields
+        boolean updated = false;
+        if (!titleField.getText().equals(movie.getTitle())) {
+            movie.setTitle(titleField.getText());
+            updated = true;
+        }
+        if (!descriptionArea.getText().equals(movie.getDescription())) {
+            movie.setDescription(descriptionArea.getText());
+            updated = true;
+        }
+        if (!posterField.getText().equals(movie.getPosterFilename())) {
+            movie.setPosterFilename(posterField.getText());
+            updated = true;
+        }
+        if (!directorsField.getText().equals(movie.getDirector())) {
+            movie.setDirectors(directorsField.getText());
+            updated = true;
+        }
+        if (!writersField.getText().equals(movie.getWriters())) {
+            movie.setWriters(writersField.getText());
+            updated = true;
+        }
+        if (!starsField.getText().equals(movie.getStars())) {
+            movie.setStars(starsField.getText());
+            updated = true;
+        }
+        try {
+            int newCinemaNumber = Integer.parseInt(cinemaField.getText());
+            if (newCinemaNumber != movie.getCinemaNumber()) {
+                movie.setCinemaNumber(newCinemaNumber);
                 updated = true;
             }
-            if (!descriptionArea.getText().equals(movie.getDescription())) {
-                movie.setDescription(descriptionArea.getText());
-                updated = true;
-            }
-            if (!posterField.getText().equals(movie.getPosterFilename())) {
-                movie.setPosterFilename(posterField.getText());
-                updated = true;
-            }
-             if (!directorsField.getText().equals(movie.getDirector())) {
-                movie.setDirectors(directorsField.getText());
-                updated = true;
-            }
-            if (!writersField.getText().equals(movie.getWriters())) {
-                movie.setWriters(writersField.getText());
-                updated = true;
-            }
-            if (!starsField.getText().equals(movie.getStars())) {
-                movie.setStars(starsField.getText());
-                updated = true;
-            }
-            try {
-                int newCinemaNumber = Integer.parseInt(cinemaField.getText());
-                if (newCinemaNumber != movie.getCinemaNumber()) {
-                    movie.setCinemaNumber(newCinemaNumber);
-                    updated = true;
-                }
-    
-                if (updated) {
-                    // Load existing movies
-                    List<Movie> movies = loadMoviesFromFile();
-    
-                    // Find the movie in the list and update it
-                    for (int i = 0; i < movies.size(); i++) {
-                        if (movies.get(i).getTitle().equals(originalTitle)) {
-                            movies.set(i, movie);  // Replace old movie with updated one
-                            break;
-                        }
+
+            if (updated) {
+                // Load existing movies
+                List<Movie> movies = loadMoviesFromFile();
+
+                // Find the movie in the list and update it
+                for (int i = 0; i < movies.size(); i++) {
+                    if (movies.get(i).getTitle().equals(originalTitle)) {
+                        movies.set(i, movie);  // Replace old movie with updated one
+                        break;
                     }
-    
-                    // Save the updated movie list back to the file
-                    saveMoviesToFile(movies);
-    
-                    // Show success message
-                    JOptionPane.showMessageDialog(editMovieFrame, "Movie Edited Successfully!");
-    
-                    // Update the JTable with the new list of movies
-                    updateMovieTable((DefaultTableModel) movieTable.getModel());
-    
-                    // Relaunch the Admin Dashboard with updated data
-                    adminFrame.dispose();  // Dispose current admin frame
-                    showAdminScreen();  // Relaunch the Admin Dashboard
-    
-                    // Reload the Trial class with the updated information
-                    trial.disposeInstance();
-                    trial.main(new String[]{});
-    
-                    // Close the Edit Movie form
-                    editMovieFrame.dispose();
-                } else {
-                    JOptionPane.showMessageDialog(editMovieFrame, "No changes were made to the movie.", "No Changes", JOptionPane.INFORMATION_MESSAGE);
                 }
-    
-            } catch (NumberFormatException ex) {
-                JOptionPane.showMessageDialog(editMovieFrame, "Cinema Number must be a valid number!", "Error", JOptionPane.ERROR_MESSAGE);
+
+                // Save the updated movie list back to the file
+                saveMoviesToFile(movies);
+
+                // Show success message
+                JOptionPane.showMessageDialog(editMovieFrame, "Movie Edited Successfully!");
+
+                // Update the JTable with the new list of movies
+                updateMovieTable((DefaultTableModel) movieTable.getModel());
+
+                // Relaunch the Admin Dashboard with updated data
+                adminFrame.dispose();  // Dispose current admin frame
+                showAdminScreen();  // Relaunch the Admin Dashboard
+
+                // Reload the Trial class with the updated information
+                trial.disposeInstance();
+                trial.main(new String[]{});
+
+                // Close the Edit Movie form
+                editMovieFrame.dispose();
+            } else {
+                JOptionPane.showMessageDialog(editMovieFrame, "No changes were made to the movie.", "No Changes", JOptionPane.INFORMATION_MESSAGE);
             }
-        });
-    
-        // Add components to the frame
-        editMovieFrame.add(titleLabel);
-        editMovieFrame.add(titleField);
-        editMovieFrame.add(descriptionLabel);
-        editMovieFrame.add(new JScrollPane(descriptionArea));
-        editMovieFrame.add(posterLabel);
-        editMovieFrame.add(posterField);
-        editMovieFrame.add(fileChooserButton);
-        editMovieFrame.add(cinemaLabel);
-        editMovieFrame.add(cinemaField);
-        editMovieFrame.add(saveButton);
-        editMovieFrame.add(directorsLabel);
-        editMovieFrame.add(directorsField);
-        editMovieFrame.add(writersLabel);
-        editMovieFrame.add(writersField);
-        editMovieFrame.add(starsLabel);
-        editMovieFrame.add(starsField);
-    
-        // Show the Edit Movie form
-        editMovieFrame.setVisible(true);
-    }
+
+        } catch (NumberFormatException ex) {
+            JOptionPane.showMessageDialog(editMovieFrame, "Cinema Number must be a valid number!", "Error", JOptionPane.ERROR_MESSAGE);
+        }
+    });
+
+    // Layout code for adding components to the panel
+    layout.setHorizontalGroup(
+        layout.createParallelGroup(GroupLayout.Alignment.LEADING)
+            .addGroup(layout.createSequentialGroup()
+                .addGroup(layout.createParallelGroup(GroupLayout.Alignment.LEADING, false)
+                    .addComponent(titleLabel)
+                    .addComponent(descriptionLabel)
+                    .addComponent(posterLabel)
+                    .addComponent(cinemaLabel)
+                    .addComponent(directorsLabel)
+                    .addComponent(writersLabel)
+                    .addComponent(starsLabel))
+                .addGroup(layout.createParallelGroup(GroupLayout.Alignment.LEADING)
+                    .addComponent(titleField)
+                    .addComponent(descriptionScrollPane)
+                    .addGroup(layout.createSequentialGroup()
+                        .addComponent(posterField)
+                        .addComponent(fileChooserButton))
+                    .addComponent(cinemaField)
+                    .addComponent(directorsField)
+                    .addComponent(writersField)
+                    .addComponent(starsField)))
+            .addComponent(saveButton, GroupLayout.Alignment.TRAILING)
+    );
+
+    layout.setVerticalGroup(
+        layout.createSequentialGroup()
+            .addGroup(layout.createParallelGroup(GroupLayout.Alignment.BASELINE)
+                .addComponent(titleLabel)
+                .addComponent(titleField))
+            .addGroup(layout.createParallelGroup(GroupLayout.Alignment.BASELINE)
+                .addComponent(descriptionLabel)
+                .addComponent(descriptionScrollPane))
+            .addGroup(layout.createParallelGroup(GroupLayout.Alignment.BASELINE)
+                .addComponent(posterLabel)
+                .addComponent(posterField)
+                .addComponent(fileChooserButton))
+            .addGroup(layout.createParallelGroup(GroupLayout.Alignment.BASELINE)
+                .addComponent(cinemaLabel)
+                .addComponent(cinemaField))
+            .addGroup(layout.createParallelGroup(GroupLayout.Alignment.BASELINE)
+                .addComponent(directorsLabel)
+                .addComponent(directorsField))
+            .addGroup(layout.createParallelGroup(GroupLayout.Alignment.BASELINE)
+                .addComponent(writersLabel)
+                .addComponent(writersField))
+            .addGroup(layout.createParallelGroup(GroupLayout.Alignment.BASELINE)
+                .addComponent(starsLabel)
+                .addComponent(starsField))
+            .addComponent(saveButton)
+    );
+
+    // Add the panel to the frame
+    editMovieFrame.add(panel);
+    editMovieFrame.setVisible(true);
+}
+
     
     public static void saveMoviesToFile(List<Movie> movies) {
         try (BufferedWriter writer = new BufferedWriter(new FileWriter("movies.txt"))) {
