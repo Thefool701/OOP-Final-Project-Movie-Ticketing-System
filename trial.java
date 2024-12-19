@@ -116,12 +116,13 @@ public static JPanel createMoviesPanel() {
     moviesPanel.add(new JLabel("List of Movies"));
 
     // Automatically add the movieSelection content
-    movieSelection movieSelectionPanel = new movieSelection(); // movieSelection extends JPanel
+    movieSelection movieSelectionPanel = new movieSelection(); // movieSelection is now a proper JPanel
     moviesPanel.add(movieSelectionPanel);
 
     // Return the moviesPanel, which now contains the movieSelection content
     return moviesPanel;
 }
+
 
 
 
