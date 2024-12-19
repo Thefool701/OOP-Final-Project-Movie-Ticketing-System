@@ -243,23 +243,25 @@ public static JPanel createSnackBarPanel() {
         // Read the list of movies from the file
         List<Movie> movieList = readMoviesFromFile("movies.txt");
         if (movieList.isEmpty()) {
-            contentPanel.add(new JLabel("No movies available."));
+            contentPanel.add(new JLabel("No movies available.", JLabel.CENTER));
+            contentPanel.revalidate();
+            contentPanel.repaint();
             return contentPanel;
         }
     
         // Name Section
-        JLabel nameLabel = new JLabel("Enter Your Full Name:");
+        JLabel nameLabel = new JLabel("Enter Your Full Name:", JLabel.CENTER);
         JTextField firstNameField = new JTextField("First", 20);
         JTextField lastNameField = new JTextField("Last", 20);
         setupPlaceholder(firstNameField, "First");
         setupPlaceholder(lastNameField, "Last");
     
-        JPanel namePanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        JPanel namePanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
         namePanel.add(firstNameField);
         namePanel.add(lastNameField);
     
         // Movie Selection
-        JLabel movieLabel = new JLabel("Select a Movie:");
+        JLabel movieLabel = new JLabel("Select a Movie:", JLabel.CENTER);
         JComboBox<String> movieDropdown = new JComboBox<>();
         for (Movie movie : movieList) {
             movieDropdown.addItem(movie.getTitle());
@@ -279,12 +281,12 @@ public static JPanel createSnackBarPanel() {
         });
     
         // Time Slot Selection
-        JLabel timeLabel = new JLabel("Select a Time Slot:");
+        JLabel timeLabel = new JLabel("Select a Time Slot:", JLabel.CENTER);
         String[] times = {"10:00 AM", "1:00 PM", "4:00 PM", "7:00 PM"};
         JComboBox<String> timeDropdown = new JComboBox<>(times);
     
         // Number of Tickets
-        JLabel ticketsLabel = new JLabel("Number of Tickets:");
+        JLabel ticketsLabel = new JLabel("Number of Tickets:", JLabel.CENTER);
         SpinnerNumberModel spinnerModel = new SpinnerNumberModel(1, 1, 25, 1);
         JSpinner ticketsSpinner = new JSpinner(spinnerModel);
     
@@ -305,7 +307,7 @@ public static JPanel createSnackBarPanel() {
             showSeatSelector(mainPanel, selectedMovie, selectedTime, numTickets, firstName, lastName, movieList);
         });
     
-        // Layout Configuration
+        // Layout Configuration (Symmetrical Layout)
         layout.setHorizontalGroup(
             layout.createParallelGroup(GroupLayout.Alignment.CENTER)
                 .addComponent(nameLabel)
@@ -313,7 +315,7 @@ public static JPanel createSnackBarPanel() {
                 .addComponent(movieLabel)
                 .addComponent(movieDropdown)
                 .addComponent(posterLabel)
-                .addComponent(descriptionLabel, GroupLayout.Alignment.CENTER)
+                .addComponent(descriptionLabel)
                 .addGroup(layout.createSequentialGroup()
                     .addComponent(timeLabel)
                     .addComponent(timeDropdown))
@@ -327,7 +329,7 @@ public static JPanel createSnackBarPanel() {
             layout.createSequentialGroup()
                 .addComponent(nameLabel)
                 .addComponent(namePanel)
-                .addGap(10)  // Reduced space between Name and Movie section
+                .addGap(5)  // Reduced space between Name and Movie section (from 10 to 5)
                 .addComponent(movieLabel)
                 .addComponent(movieDropdown)
                 .addPreferredGap(LayoutStyle.ComponentPlacement.UNRELATED) // Space between movie dropdown and poster
@@ -345,8 +347,14 @@ public static JPanel createSnackBarPanel() {
                 .addComponent(bookButton)
         );
     
+        // Revalidate and repaint after layout is set
+        contentPanel.revalidate();
+        contentPanel.repaint();
+    
         return contentPanel;
     }
+    
+    
     
     // Helper method for setting up placeholder text in text fields
     private static void setupPlaceholder(JTextField field, String placeholder) {
