@@ -25,7 +25,10 @@ public class AdminDashboard extends JFrame {
                     String description = movieData[1];
                     String posterFilename = movieData[2];
                     int cinemaNumber = Integer.parseInt(movieData[3]);
-                    Movie movie = new Movie(title, description, posterFilename, cinemaNumber);
+                    String directors = movieData[4];
+                    String writers = movieData[5];
+                    String stars = movieData[6];
+                    Movie movie = new Movie(title, description, posterFilename, cinemaNumber, directors, writers, stars);
                     movies.add(movie);
                 }
             }
@@ -56,11 +59,11 @@ public class AdminDashboard extends JFrame {
         moviePanel.setLayout(new BorderLayout());
         moviePanel.setBackground(new Color(128, 0, 0));
 
-        String[] columnNames = {"Movie Name", "Description", "Poster Filename", "Cinema Number"};
+        String[] columnNames = {"Movie Name", "Description", "Poster Filename", "Cinema Number", "Directors", "Writers", "Stars"};
         DefaultTableModel movieTableModel = new DefaultTableModel(columnNames, 0);
         List<Movie> movies = loadMoviesFromFile();
         for (Movie movie : movies) {
-            movieTableModel.addRow(new Object[]{movie.getTitle(), movie.getDescription(), movie.getPosterFilename(), movie.getCinemaNumber()});
+            movieTableModel.addRow(new Object[]{movie.getTitle(), movie.getDescription(), movie.getPosterFilename(), movie.getCinemaNumber(), movie.getDirector(), movie.getWriters(), movie.getStars()});
         }
 
         JTable movieTable = new JTable(movieTableModel);
@@ -114,7 +117,10 @@ public class AdminDashboard extends JFrame {
                         "Are you sure you want to delete the movie:\n" + 
                         "Title: " + selectedMovie.getTitle() + "\n" +
                         "Description: " + selectedMovie.getDescription() + "\n" +
-                        "Cinema Number: " + selectedMovie.getCinemaNumber(),
+                        "Cinema Number: " + selectedMovie.getCinemaNumber() + "\n" +
+                        "Directors: " + selectedMovie.getDirector() + "\n" +
+                        "Writers: " + selectedMovie.getWriters() + "\n" +
+                        "Stars: " +selectedMovie.getStars(),
                         "Delete Movie", JOptionPane.YES_NO_OPTION);
                 if (confirmation == JOptionPane.YES_OPTION) {
                     movies.remove(selectedMovie);
@@ -125,10 +131,7 @@ public class AdminDashboard extends JFrame {
                     showAdminScreen(); // Relaunch the admin screen
         
                     JOptionPane.showMessageDialog(adminFrame, "Movie Deleted Successfully!");
-                    
-            
-                    
-                    
+                
                     // Relaunch trial.java
                     trial.disposeInstance();
                     trial.main(new String[]{});
@@ -169,6 +172,12 @@ public class AdminDashboard extends JFrame {
         JTextField posterField = new JTextField();
         JLabel cinemaLabel = new JLabel("Cinema Number:");
         JTextField cinemaField = new JTextField();
+        JLabel directorsLabel = new JLabel("Directors ");
+        JTextField directorsField = new JTextField();
+        JLabel writersLabel = new JLabel("Writers ");
+        JTextField writersField = new JTextField();
+        JLabel starsLabel = new JLabel("Stars: ");
+        JTextField starsField = new JTextField();
 
         JButton fileChooserButton = new JButton("Choose Poster");
         fileChooserButton.addActionListener(e -> {
@@ -186,15 +195,18 @@ public class AdminDashboard extends JFrame {
             String title = titleField.getText();
             String description = descriptionArea.getText();
             String posterFilename = posterField.getText();
+            String directors = directorsField.getText();
+            String writers = writersField.getText();
+            String stars = starsField.getText();
             
-            if (title.isEmpty() || description.isEmpty() || posterFilename.isEmpty() || cinemaField.getText().isEmpty()) {
+            if (title.isEmpty() || description.isEmpty() || posterFilename.isEmpty() || cinemaField.getText().isEmpty() || directors.isEmpty() || writers.isEmpty() || stars.isEmpty()) {
                 JOptionPane.showMessageDialog(addMovieFrame, "All fields are required!", "Error", JOptionPane.ERROR_MESSAGE);
                 return;
             }
         
             try {
                 int cinemaNumber = Integer.parseInt(cinemaField.getText());
-                Movie newMovie = new Movie(title, description, posterFilename, cinemaNumber);
+                Movie newMovie = new Movie(title, description, posterFilename, cinemaNumber, directors, writers, stars);
                 List<Movie> movies = loadMoviesFromFile();
                 movies.add(newMovie);
                 saveMoviesToFile(movies);
@@ -230,6 +242,12 @@ public class AdminDashboard extends JFrame {
         addMovieFrame.add(fileChooserButton);
         addMovieFrame.add(cinemaLabel);
         addMovieFrame.add(cinemaField);
+        addMovieFrame.add(directorsLabel);
+        addMovieFrame.add(directorsField);
+        addMovieFrame.add(writersLabel);
+        addMovieFrame.add(writersField);
+        addMovieFrame.add(starsLabel);
+        addMovieFrame.add(starsField);
         addMovieFrame.add(saveButton);
 
         addMovieFrame.setVisible(true);
@@ -237,7 +255,7 @@ public class AdminDashboard extends JFrame {
 
     public static void showEditMovieForm(Movie movie, JTable movieTable) {
         JFrame editMovieFrame = new JFrame("Edit Movie");
-        editMovieFrame.setSize(400, 300);
+        editMovieFrame.setSize(400, 400);
         editMovieFrame.setLayout(new GridLayout(6, 2));
     
         JLabel titleLabel = new JLabel("Movie Title:");
@@ -248,6 +266,12 @@ public class AdminDashboard extends JFrame {
         JTextField posterField = new JTextField(movie.getPosterFilename());
         JLabel cinemaLabel = new JLabel("Cinema Number:");
         JTextField cinemaField = new JTextField(String.valueOf(movie.getCinemaNumber()));
+        JLabel directorsLabel = new JLabel("Directors");
+        JTextField directorsField = new JTextField(movie.getDirector());
+        JLabel writersLabel = new JLabel("Writers");
+        JTextField writersField = new JTextField(movie.getWriters());
+        JLabel starsLabel = new JLabel("Actors");
+        JTextField starsField = new JTextField(movie.getStars());
     
         JButton fileChooserButton = new JButton("Choose Poster");
         fileChooserButton.addActionListener(e -> {
@@ -277,6 +301,18 @@ public class AdminDashboard extends JFrame {
             }
             if (!posterField.getText().equals(movie.getPosterFilename())) {
                 movie.setPosterFilename(posterField.getText());
+                updated = true;
+            }
+             if (!directorsField.getText().equals(movie.getDirector())) {
+                movie.setDirectors(directorsField.getText());
+                updated = true;
+            }
+            if (!writersField.getText().equals(movie.getWriters())) {
+                movie.setWriters(writersField.getText());
+                updated = true;
+            }
+            if (!starsField.getText().equals(movie.getStars())) {
+                movie.setStars(starsField.getText());
                 updated = true;
             }
             try {
@@ -337,6 +373,12 @@ public class AdminDashboard extends JFrame {
         editMovieFrame.add(cinemaLabel);
         editMovieFrame.add(cinemaField);
         editMovieFrame.add(saveButton);
+        editMovieFrame.add(directorsLabel);
+        editMovieFrame.add(directorsField);
+        editMovieFrame.add(writersLabel);
+        editMovieFrame.add(writersField);
+        editMovieFrame.add(starsLabel);
+        editMovieFrame.add(starsField);
     
         // Show the Edit Movie form
         editMovieFrame.setVisible(true);
@@ -345,7 +387,7 @@ public class AdminDashboard extends JFrame {
     public static void saveMoviesToFile(List<Movie> movies) {
         try (BufferedWriter writer = new BufferedWriter(new FileWriter("movies.txt"))) {
             for (Movie movie : movies) {
-                writer.write(movie.getTitle() + "|" + movie.getDescription() + "|" + movie.getPosterFilename() + "|" + movie.getCinemaNumber());
+                writer.write(movie.getTitle() + "|" + movie.getDescription() + "|" + movie.getPosterFilename() + "|" + movie.getCinemaNumber() + "|" + movie.getDirector() + "|" + movie.getWriters() + "|" + movie.getStars());
                 writer.newLine();
             }
         } catch (IOException e) {
@@ -384,12 +426,19 @@ public class AdminDashboard extends JFrame {
         private String description;
         private String posterFilename;
         private int cinemaNumber;
+        private String directors;
+        private String writers;
+        private String stars;
+        
 
-        public Movie(String title, String description, String posterFilename, int cinemaNumber) {
+        public Movie(String title, String description, String posterFilename, int cinemaNumber, String directors, String writers, String stars) {
             this.title = title;
             this.description = description;
             this.posterFilename = posterFilename;
             this.cinemaNumber = cinemaNumber;
+            this.directors = directors;
+            this.writers = writers;
+            this.stars = stars;
         }
 
         public String getTitle() {
@@ -422,6 +471,30 @@ public class AdminDashboard extends JFrame {
 
         public void setCinemaNumber(int cinemaNumber) {
             this.cinemaNumber = cinemaNumber;
+        }
+
+        public String getDirector() {
+            return directors;
+        }
+
+        public void setDirectors(String directors) {
+            this.directors = directors;
+        }
+
+        public String getWriters() {
+            return writers;
+        }
+
+        public void setWriters(String writers) {
+            this.writers = writers;
+        }
+
+        public String getStars() {
+            return stars;
+        }
+
+        public void setStars(String stars) {
+            this.stars = stars;
         }
     }
 
