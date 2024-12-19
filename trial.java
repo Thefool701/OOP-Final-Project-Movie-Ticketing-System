@@ -11,43 +11,46 @@ public class trial {
 
     public static void main(String[] args) {
         
-        // Create the main frame
-        frame = new JFrame("Movie Ticket Booking System");
-        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        frame.setSize(800, 900);
-        frame.setLayout(new BorderLayout());
-        frame.setResizable(false);
+       // Create the main frame
+frame = new JFrame("Movie Ticket Booking System");
+frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+frame.setSize(800, 900);
+frame.setLayout(new BorderLayout());
+frame.setResizable(false);
 
-        // Panel for buttons at the top
-        JPanel topPanel = createTopPanel(frame);
+// Panel for buttons at the top
+JPanel topPanel = createTopPanel(frame);
 
-        // Main panel with CardLayout for switching pages
-        JPanel mainPanel = new JPanel(new CardLayout());
+// Main panel with CardLayout for switching pages
+JPanel mainPanel = new JPanel(new CardLayout());
 
-        // Create different page panels
-        JPanel homePanel = createHomePanel();
-        JPanel bookTicketPanel = createBookTicketPanel(mainPanel);
-        JPanel moviesPanel = createMoviesPanel();
-        JPanel snackBarPanel = createSnackBarPanel();
-        JPanel adminPanel = createAdminPanel(frame);
+// Create different page panels
+JPanel homePanel = createHomePanel();
+JPanel bookTicketPanel = createBookTicketPanel(mainPanel);
+JPanel moviesPanel = createMoviesPanel();  // This will automatically include movieSelection content
+frame.add(moviesPanel, BorderLayout.CENTER); // Add to frame if needed directly
 
-        // Add panels to the main panel with unique keys
-        mainPanel.add(homePanel, "HOME");
-        mainPanel.add(bookTicketPanel, "BOOK_MOVIE_TICKET");
-        mainPanel.add(moviesPanel, "MOVIES");
-        mainPanel.add(snackBarPanel, "SNACK_BAR");
-        mainPanel.add(adminPanel, "ADMIN");
+JPanel snackBarPanel = createSnackBarPanel();
+JPanel adminPanel = createAdminPanel(frame);
 
-        // Add navigation action listeners to buttons
-        addNavigationListeners(topPanel, mainPanel);
+// Add panels to the main panel with unique keys
+mainPanel.add(homePanel, "HOME");
+mainPanel.add(bookTicketPanel, "BOOK_MOVIE_TICKET");
+mainPanel.add(moviesPanel, "MOVIES");  // Movies panel now includes movieSelection
+mainPanel.add(snackBarPanel, "SNACK_BAR");
+mainPanel.add(adminPanel, "ADMIN");
 
-        // Add components to the frame
-        frame.add(topPanel, BorderLayout.NORTH);
-        frame.add(mainPanel, BorderLayout.CENTER);
+// Add navigation action listeners to buttons
+addNavigationListeners(topPanel, mainPanel);
 
-        // Set frame visibility
-        frame.setVisible(true);
+// Add components to the frame
+frame.add(topPanel, BorderLayout.NORTH);
+frame.add(mainPanel, BorderLayout.CENTER);
+
+// Set frame visibility
+frame.setVisible(true);
     }
+
 
       // Static method to dispose of the current instance of trial
     public static void disposeInstance() {
@@ -103,13 +106,25 @@ public static JPanel createHomePanel() {
     return homePanel;
 }
 
+public static JPanel createMoviesPanel() {
+    // Create a panel to hold the movie list and other elements
+    JPanel moviesPanel = new JPanel();
+    moviesPanel.setLayout(new BoxLayout(moviesPanel, BoxLayout.Y_AXIS)); // Use BoxLayout for vertical stacking
+    moviesPanel.setBackground(Color.WHITE);
 
-    public static JPanel createMoviesPanel() {
-        JPanel moviesPanel = new JPanel();
-        moviesPanel.setBackground(Color.WHITE);
-        moviesPanel.add(new JLabel("List of Movies"));
-        return moviesPanel;
-    }
+    // Add a label for the movie list header
+    moviesPanel.add(new JLabel("List of Movies"));
+
+    // Automatically add the movieSelection content
+    movieSelection movieSelectionPanel = new movieSelection(); // movieSelection extends JPanel
+    moviesPanel.add(movieSelectionPanel);
+
+    // Return the moviesPanel, which now contains the movieSelection content
+    return moviesPanel;
+}
+
+
+
 
     public static JPanel createSnackBarPanel() {
         JPanel snackBarPanel = new JPanel();
