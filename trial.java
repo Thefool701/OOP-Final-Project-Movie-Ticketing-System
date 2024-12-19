@@ -232,10 +232,13 @@ public static JPanel createSnackBarPanel() {
     }
 
   
-
     public static JPanel createBookTicketPanel(JPanel mainPanel) {
-        JPanel contentPanel = new JPanel(new GridLayout(9, 1, 5, 10));
+        JPanel contentPanel = new JPanel();
         contentPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+        GroupLayout layout = new GroupLayout(contentPanel);
+        contentPanel.setLayout(layout);
+        layout.setAutoCreateGaps(true);
+        layout.setAutoCreateContainerGaps(true);
     
         // Read the list of movies from the file
         List<Movie> movieList = readMoviesFromFile("movies.txt");
@@ -245,42 +248,13 @@ public static JPanel createSnackBarPanel() {
         }
     
         // Name Section
-        JLabel nameLabel = new JLabel("Enter your First and Last Name:");
+        JLabel nameLabel = new JLabel("Enter Your Full Name:");
+        JTextField firstNameField = new JTextField("First", 20);
+        JTextField lastNameField = new JTextField("Last", 20);
+        setupPlaceholder(firstNameField, "First");
+        setupPlaceholder(lastNameField, "Last");
     
-        // Panel for the text fields (aligned horizontally)
-        JPanel namePanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 0));
-        JTextField firstNameField = new JTextField("First", 12);
-        JTextField lastNameField = new JTextField("Last", 12);
-    
-        // Add focus listeners for placeholders
-        firstNameField.addFocusListener(new java.awt.event.FocusAdapter() {
-            public void focusGained(java.awt.event.FocusEvent evt) {
-                if (firstNameField.getText().equals("First")) {
-                    firstNameField.setText("");
-                }
-            }
-    
-            public void focusLost(java.awt.event.FocusEvent evt) {
-                if (firstNameField.getText().isEmpty()) {
-                    firstNameField.setText("First");
-                }
-            }
-        });
-    
-        lastNameField.addFocusListener(new java.awt.event.FocusAdapter() {
-            public void focusGained(java.awt.event.FocusEvent evt) {
-                if (lastNameField.getText().equals("Last")) {
-                    lastNameField.setText("");
-                }
-            }
-    
-            public void focusLost(java.awt.event.FocusEvent evt) {
-                if (lastNameField.getText().isEmpty()) {
-                    lastNameField.setText("Last");
-                }
-            }
-        });
-    
+        JPanel namePanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         namePanel.add(firstNameField);
         namePanel.add(lastNameField);
     
@@ -311,7 +285,7 @@ public static JPanel createSnackBarPanel() {
     
         // Number of Tickets
         JLabel ticketsLabel = new JLabel("Number of Tickets:");
-        SpinnerNumberModel spinnerModel = new SpinnerNumberModel(1, 1, 5, 1);
+        SpinnerNumberModel spinnerModel = new SpinnerNumberModel(1, 1, 25, 1);
         JSpinner ticketsSpinner = new JSpinner(spinnerModel);
     
         // Book Button
@@ -322,31 +296,76 @@ public static JPanel createSnackBarPanel() {
             int numTickets = (int) ticketsSpinner.getValue();
             String firstName = firstNameField.getText().trim();
             String lastName = lastNameField.getText().trim();
-
+    
             if (firstName.isEmpty() || lastName.isEmpty() || firstName.equals("First") || lastName.equals("Last")) {
                 JOptionPane.showMessageDialog(null, "Please enter your full name.", "Error", JOptionPane.ERROR_MESSAGE);
                 return;
             }
-
+    
             showSeatSelector(mainPanel, selectedMovie, selectedTime, numTickets, firstName, lastName, movieList);
         });
     
-        // Add components to the content panel
-        contentPanel.add(nameLabel);
-        contentPanel.add(namePanel); // Add the name panel with aligned fields
-        contentPanel.add(movieLabel);
-        contentPanel.add(movieDropdown);
-        contentPanel.add(posterLabel);
-        contentPanel.add(descriptionLabel);
-        contentPanel.add(timeLabel);
-        contentPanel.add(timeDropdown);
-        contentPanel.add(ticketsLabel);
-        contentPanel.add(ticketsSpinner);
-        contentPanel.add(bookButton);
+        // Layout Configuration
+        layout.setHorizontalGroup(
+            layout.createParallelGroup(GroupLayout.Alignment.CENTER)
+                .addComponent(nameLabel)
+                .addComponent(namePanel)
+                .addComponent(movieLabel)
+                .addComponent(movieDropdown)
+                .addComponent(posterLabel)
+                .addComponent(descriptionLabel, GroupLayout.Alignment.CENTER)
+                .addGroup(layout.createSequentialGroup()
+                    .addComponent(timeLabel)
+                    .addComponent(timeDropdown))
+                .addGroup(layout.createSequentialGroup()
+                    .addComponent(ticketsLabel)
+                    .addComponent(ticketsSpinner))
+                .addComponent(bookButton)
+        );
+    
+        layout.setVerticalGroup(
+            layout.createSequentialGroup()
+                .addComponent(nameLabel)
+                .addComponent(namePanel)
+                .addGap(10)  // Reduced space between Name and Movie section
+                .addComponent(movieLabel)
+                .addComponent(movieDropdown)
+                .addPreferredGap(LayoutStyle.ComponentPlacement.UNRELATED) // Space between movie dropdown and poster
+                .addComponent(posterLabel)
+                .addComponent(descriptionLabel)
+                .addGap(15)  // Space between description and time selection
+                .addGroup(layout.createParallelGroup(GroupLayout.Alignment.BASELINE)
+                    .addComponent(timeLabel)
+                    .addComponent(timeDropdown))
+                .addPreferredGap(LayoutStyle.ComponentPlacement.UNRELATED)  // Space between time dropdown and ticket spinner
+                .addGroup(layout.createParallelGroup(GroupLayout.Alignment.BASELINE)
+                    .addComponent(ticketsLabel)
+                    .addComponent(ticketsSpinner))
+                .addGap(20)  // Adding some space before the book button
+                .addComponent(bookButton)
+        );
     
         return contentPanel;
     }
     
+    // Helper method for setting up placeholder text in text fields
+    private static void setupPlaceholder(JTextField field, String placeholder) {
+        field.addFocusListener(new java.awt.event.FocusAdapter() {
+            public void focusGained(java.awt.event.FocusEvent evt) {
+                if (field.getText().equals(placeholder)) {
+                    field.setText("");
+                }
+            }
+    
+            public void focusLost(java.awt.event.FocusEvent evt) {
+                if (field.getText().isEmpty()) {
+                    field.setText(placeholder);
+                }
+            }
+        });
+    }
+    
+
     
             public static void showSeatSelector(JPanel mainPanel, String movie, String time, int numTickets, String firstName, String lastName, List<Movie> movieList) {
             JFrame seatFrame = new JFrame("Select Seats");
@@ -435,9 +454,6 @@ public static JPanel createSnackBarPanel() {
     posterLabel.setIcon(new ImageIcon(poster.getImage().getScaledInstance(150, 200, Image.SCALE_SMOOTH)));
 }
 
-
-
-       
         private static List<Movie> readMoviesFromFile(String filePath) {
     List<Movie> movies = new ArrayList<>();
     boolean isNowShowing = false; // Flag to indicate if we're in the "Now Showing" section
@@ -482,7 +498,6 @@ public static JPanel createSnackBarPanel() {
 }
 
 
-    
         public static void showInvoice(String movie, String time, int numTickets, String firstName, String lastName, List<String> selectedSeats, List<Movie> movieList, JPanel mainPanel) {
             String cinema = movieList.stream().filter(m -> m.getTitle().equals(movie)).findFirst().map(Movie::getCinemaNumber).orElse(-1).toString();
     
