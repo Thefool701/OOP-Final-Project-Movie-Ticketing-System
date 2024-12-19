@@ -8,7 +8,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
 
-public class Sample {
+public class KevinR {
     public static void main(String[] args) {
         // Create the main JFrame
         JFrame frame = new JFrame("Menu Example");
