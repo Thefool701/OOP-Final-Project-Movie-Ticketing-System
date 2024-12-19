@@ -1,5 +1,7 @@
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -24,8 +26,8 @@ public class movieSelection extends JPanel {
         readMoviesFromFile(nowShowingMovies, comingSoonMovies);
 
         // Create Now Showing and Coming Soon panels
-        JPanel nowShowingPanel = createMoviePanel(nowShowingMovies);
-        JPanel comingSoonPanel = createMoviePanel(comingSoonMovies);
+        JScrollPane nowShowingPanel = createMoviePanel(nowShowingMovies);
+        JScrollPane comingSoonPanel = createMoviePanel(comingSoonMovies);
 
         // Add panels to contentPanel
         contentPanel.add(nowShowingPanel, "Now Showing");
@@ -64,59 +66,69 @@ public class movieSelection extends JPanel {
         button.setBackground(new Color(199, 185, 198));
     }
 
-    private JPanel createMoviePanel(List<Movie> movies) {
+    private JScrollPane createMoviePanel(List<Movie> movies) {  // Change return type to JScrollPane
         JPanel moviePanel = new JPanel(new GridLayout(2, 2, 10, 10));
         moviePanel.setBackground(Color.LIGHT_GRAY);
-
+    
         for (Movie movie : movies) {
             JPanel movieContainer = new JPanel(new BorderLayout(5, 5));
             movieContainer.setBackground(Color.WHITE);
             movieContainer.setPreferredSize(new Dimension(200, 370));
             movieContainer.setBorder(BorderFactory.createLineBorder(Color.GRAY, 3));
-
+    
             // Create poster label
             JLabel posterLabel = new JLabel(resizeImageIcon(movie.getPosterPath(), 250, 320));
             posterLabel.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-
+    
             // Add mouse listener for zoom effect
             posterLabel.addMouseListener(new java.awt.event.MouseAdapter() {
                 @Override
                 public void mouseEntered(java.awt.event.MouseEvent evt) {
                     posterLabel.setIcon(resizeImageIcon(movie.getPosterPath(), 300, 350));
                 }
-
+    
                 @Override
                 public void mouseExited(java.awt.event.MouseEvent evt) {
                     posterLabel.setIcon(resizeImageIcon(movie.getPosterPath(), 250, 320));
                 }
             });
-
+    
             // Title label
             JLabel titleLabel = new JLabel(movie.getTitle(), SwingConstants.CENTER);
             titleLabel.setFont(new Font("Arial", Font.BOLD, 20));
             titleLabel.setForeground(Color.DARK_GRAY);
-
+    
             // Create "View Details" button
             JButton viewDetailsButton = new JButton("View Details");
             viewDetailsButton.setFont(new Font("Arial", Font.BOLD, 15));
             viewDetailsButton.addActionListener(e -> showMovieDetails(movie));
-
+    
             JPanel bottomPanel = new JPanel(new BorderLayout(5, 5));
             bottomPanel.setBackground(Color.WHITE);
             bottomPanel.add(titleLabel, BorderLayout.NORTH);
             bottomPanel.add(viewDetailsButton, BorderLayout.SOUTH);
-
+    
             movieContainer.add(posterLabel, BorderLayout.CENTER);
             movieContainer.add(bottomPanel, BorderLayout.SOUTH);
-
+    
             moviePanel.add(movieContainer);
         }
-
-        return moviePanel;
+    
+        // Wrap moviePanel in a JScrollPane
+        JScrollPane scrollPane = new JScrollPane(moviePanel);
+        scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
+        scrollPane.getVerticalScrollBar().setUnitIncrement(16); // Fast scroll speed
+        scrollPane.getVerticalScrollBar().setBlockIncrement(32); // Fast scroll speed
+    
+        return scrollPane;  // Now it directly returns the JScrollPane
     }
+    
+    
+    
+    
 
     private void readMoviesFromFile(List<Movie> nowShowing, List<Movie> comingSoon) {
-        try (BufferedReader reader = new BufferedReader(new FileReader("movies.txt"))) {
+        try (BufferedReader reader = new BufferedReader(new FileReader("movie.txt"))) {
             String line;
             List<Movie> currentList = null;
 
@@ -127,17 +139,16 @@ public class movieSelection extends JPanel {
                     currentList = comingSoon;
                 } else if (!line.trim().isEmpty()) {
                     String[] parts = line.split("\\|");
-                    if (parts.length == 7) {
+                    if (parts.length == 6) {
                         String title = parts[0].trim();
                         String description = parts[1].trim();
                         String posterPath = parts[2].trim();
-                        String cinemaNumber = parts[3].trim();
-                        String directors = parts[4].trim();
-                        String writers = parts[5].trim();
-                        String stars = parts[6].trim();
+                        String director = parts[3].trim();
+                        String writers = parts[4].trim();
+                        String stars = parts[5].trim();
 
                         if (new File(posterPath).exists()) {
-                            currentList.add(new Movie(title, description, posterPath, cinemaNumber, directors, writers, stars));
+                            currentList.add(new Movie(title, description, posterPath, director, writers, stars));
                         } else {
                             System.out.println("Skipping movie with invalid poster path: " + title);
                         }
@@ -167,17 +178,12 @@ public class movieSelection extends JPanel {
         JLabel posterLabel = new JLabel(resizeImageIcon(movie.getPosterPath(), 400, 500));
         panel.add(posterLabel, BorderLayout.CENTER);
 
-        // Details
-        JTextArea detailsArea = new JTextArea();
-        detailsArea.setEditable(false);
-        detailsArea.setWrapStyleWord(true);
-        detailsArea.setLineWrap(true);
-        detailsArea.setText("Description: " + movie.getDescription() + "\n\n" +
-                            "Cinema: " + movie.getCinemaNumber() + "\n\n" +
-                            "Director(s): " + movie.getDirector() + "\n\n" +
-                            "Writer(s): " + movie.getWriters() + "\n\n" +
-                            "Stars: " + movie.getStars());
-        panel.add(new JScrollPane(detailsArea), BorderLayout.SOUTH);
+        // Description
+        JTextArea descriptionArea = new JTextArea(movie.getDescription());
+        descriptionArea.setEditable(false);
+        descriptionArea.setWrapStyleWord(true);
+        descriptionArea.setLineWrap(true);
+        panel.add(new JScrollPane(descriptionArea), BorderLayout.SOUTH);
 
         detailsFrame.add(panel);
         detailsFrame.setVisible(true);
@@ -194,16 +200,14 @@ public class movieSelection extends JPanel {
         private final String title;
         private final String description;
         private final String posterPath;
-        private final String cinemaNumber;
         private final String director;
         private final String writers;
         private final String stars;
 
-        public Movie(String title, String description, String posterPath, String cinemaNumber, String director, String writers, String stars) {
+        public Movie(String title, String description, String posterPath, String director, String writers, String stars) {
             this.title = title;
             this.description = description;
             this.posterPath = posterPath;
-            this.cinemaNumber = cinemaNumber;
             this.director = director;
             this.writers = writers;
             this.stars = stars;
@@ -219,10 +223,6 @@ public class movieSelection extends JPanel {
 
         public String getPosterPath() {
             return posterPath;
-        }
-
-        public String getCinemaNumber() {
-            return cinemaNumber;
         }
 
         public String getDirector() {
