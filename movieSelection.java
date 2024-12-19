@@ -1,69 +1,71 @@
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.io.*;
-import java.util.*;
+import java.util.ArrayList;
 import java.util.List;
 
-public class movieSelection {
+public class movieSelection extends JPanel {
 
-    public static void main(String[] args) {
-        // Create the main frame
-        JFrame frame = new JFrame("Movie Selection");
-        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        frame.setSize(800, 900);
-        frame.setResizable(false);
-        frame.setLayout(new BorderLayout(10, 10));
+    public movieSelection() {
+       // Create the main frame
+       JFrame frame = new JFrame("Movie Selection");
+       frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+       frame.setSize(800, 900);
+       frame.setResizable(false);
+       frame.setLayout(new BorderLayout(10, 10));
 
-        // CardLayout to switch (Now Showing and Coming Soon)
-        JPanel contentPanel = new JPanel(new CardLayout());
-        frame.add(contentPanel, BorderLayout.CENTER);
+       // CardLayout to switch (Now Showing and Coming Soon)
+       JPanel contentPanel = new JPanel(new CardLayout());
+       frame.add(contentPanel, BorderLayout.CENTER);
 
-        // Panel for the buttons at the top
-        JPanel buttonPanel = new JPanel();
-        buttonPanel.setLayout(new FlowLayout());
+       // Panel for the buttons at the top
+       JPanel buttonPanel = new JPanel();
+       buttonPanel.setLayout(new FlowLayout());
 
-        // "Now Showing" button
-        JButton nowShowingButton = new JButton("NOW SHOWING");
-        nowShowingButton.setFont(new Font("Arial", Font.BOLD, 20));
-        buttonPanel.add(nowShowingButton);
-        nowShowingButton.setBackground(new Color(199, 185, 198));
+       // "Now Showing" button
+       JButton nowShowingButton = new JButton("NOW SHOWING");
+       nowShowingButton.setFont(new Font("Arial", Font.BOLD, 20));
+       buttonPanel.add(nowShowingButton);
+       nowShowingButton.setBackground(new Color(199, 185, 198));
 
-        // "Coming Soon" button
-        JButton comingSoonButton = new JButton("COMING SOON");
-        comingSoonButton.setFont(new Font("Arial", Font.BOLD, 20));
-        buttonPanel.add(comingSoonButton);
-        comingSoonButton.setBackground(new Color(199, 185, 198));
+       // "Coming Soon" button
+       JButton comingSoonButton = new JButton("COMING SOON");
+       comingSoonButton.setFont(new Font("Arial", Font.BOLD, 20));
+       buttonPanel.add(comingSoonButton);
+       comingSoonButton.setBackground(new Color(199, 185, 198));
 
-        frame.add(buttonPanel, BorderLayout.NORTH);
+       frame.add(buttonPanel, BorderLayout.NORTH);
 
-        // Read movies from the movie.txt file
-        List<Movie> nowShowingMovies = new ArrayList<>();
-        List<Movie> comingSoonMovies = new ArrayList<>();
-        readMoviesFromFile(nowShowingMovies, comingSoonMovies);
+       // Read movies from the movie.txt file
+       List<Movie> nowShowingMovies = new ArrayList<>();
+       List<Movie> comingSoonMovies = new ArrayList<>();
+       readMoviesFromFile(nowShowingMovies, comingSoonMovies);
 
-        // Create "Now Showing" panel
-        JPanel nowShowingPanel = createMoviePanel(nowShowingMovies);
+       // Create "Now Showing" panel
+       JPanel nowShowingPanel = createMoviePanel(nowShowingMovies);
 
-        // Create "Coming Soon" panel
-        JPanel comingSoonPanel = createMoviePanel(comingSoonMovies);
+       // Create "Coming Soon" panel
+       JPanel comingSoonPanel = createMoviePanel(comingSoonMovies);
 
-        // Add panels to contentPanel
-        contentPanel.add(nowShowingPanel, "nowShowing");
-        contentPanel.add(comingSoonPanel, "comingSoon");
+       // Add panels to contentPanel
+       contentPanel.add(nowShowingPanel, "nowShowing");
+       contentPanel.add(comingSoonPanel, "comingSoon");
 
-        // Show Now Showing by default
-        CardLayout cl = (CardLayout) contentPanel.getLayout();
-        cl.show(contentPanel, "nowShowing");
+       // Show Now Showing by default
+       CardLayout cl = (CardLayout) contentPanel.getLayout();
+       cl.show(contentPanel, "nowShowing");
 
-        // Add action listeners to buttons
-        nowShowingButton.addActionListener(e -> cl.show(contentPanel, "nowShowing"));
-        comingSoonButton.addActionListener(e -> cl.show(contentPanel, "comingSoon"));
+       // Add action listeners to buttons
+       nowShowingButton.addActionListener(e -> cl.show(contentPanel, "nowShowing"));
+       comingSoonButton.addActionListener(e -> cl.show(contentPanel, "comingSoon"));
 
-        // Frame visibility
-        frame.setVisible(true);
+       // Frame visibility
+       frame.setVisible(true);
     }
 
-    private static void readMoviesFromFile(List<Movie> nowShowing, List<Movie> comingSoon) {
+    public static void readMoviesFromFile(List<Movie> nowShowing, List<Movie> comingSoon) {
         try (BufferedReader reader = new BufferedReader(new FileReader("movie.txt"))) {
             String line;
             List<Movie> currentList = null;
@@ -103,7 +105,7 @@ public class movieSelection {
         }
     }
 
-    private static JPanel createMoviePanel(List<Movie> movies) {
+    public static JPanel createMoviePanel(List<Movie> movies) {
         JPanel moviePanel = new JPanel(new GridLayout(2, 2, 10, 10));
         moviePanel.setBackground(Color.LIGHT_GRAY);
 
@@ -155,7 +157,7 @@ public class movieSelection {
         return moviePanel;
     }
 
-    private static void showMovieDetails(Movie movie) {
+    public static void showMovieDetails(Movie movie) {
         JFrame detailsFrame = new JFrame(movie.getTitle());
         detailsFrame.setSize(700, 850);
         detailsFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
@@ -212,20 +214,21 @@ public class movieSelection {
         detailsFrame.setVisible(true);
     }
 
-    private static ImageIcon resizeImageIcon(String filePath, int width, int height) {
+    public static ImageIcon resizeImageIcon(String filePath, int width, int height) {
         ImageIcon icon = new ImageIcon(filePath);
         Image img = icon.getImage();
         Image resizedImage = img.getScaledInstance(width, height, Image.SCALE_SMOOTH);
         return new ImageIcon(resizedImage);
     }
 
+
     static class Movie {
-        private String title;
-        private String description;
-        private String posterPath;
-        private String director;
-        private String writers;
-        private String stars;
+        public String title;
+        public String description;
+        public String posterPath;
+        public String director;
+        public String writers;
+        public String stars;
 
         public Movie(String title, String description, String posterPath, String director, String writers, String stars) {
             this.title = title;
