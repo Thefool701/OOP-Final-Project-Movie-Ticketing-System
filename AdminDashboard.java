@@ -5,7 +5,9 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.*;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class AdminDashboard extends JFrame {
     public static JFrame adminFrame;
@@ -14,11 +16,22 @@ public class AdminDashboard extends JFrame {
         showAdminScreen();
     }
 
-    public static List<Movie> loadMoviesFromFile() {
-        List<Movie> movies = new ArrayList<>();
-        try (BufferedReader reader = new BufferedReader(new FileReader("movies.txt"))) {
-            String line;
-            while ((line = reader.readLine()) != null) {
+    public static Map<String, List<Movie>> loadMoviesFromFile() {
+    Map<String, List<Movie>> categorizedMovies = new HashMap<>();
+    List<Movie> nowShowingMovies = new ArrayList<>();
+    List<Movie> comingSoonMovies = new ArrayList<>();
+    
+    try (BufferedReader reader = new BufferedReader(new FileReader("movies.txt"))) {
+        String line;
+        String currentSection = null;
+
+        while ((line = reader.readLine()) != null) {
+            if (line.equals("NOW SHOWING")) {
+                currentSection = "NOW SHOWING";
+            } else if (line.equals("COMING SOON")) {
+                currentSection = "COMING SOON";
+            } else {
+                // Parse the movie data if it's not a section header
                 String[] movieData = line.split("\\|");
                 if (movieData.length == 7) {
                     String title = movieData[0];
@@ -29,15 +42,26 @@ public class AdminDashboard extends JFrame {
                     String writers = movieData[5];
                     String stars = movieData[6];
                     Movie movie = new Movie(title, description, posterFilename, cinemaNumber, directors, writers, stars);
-                    movies.add(movie);
+
+                    // Add the movie to the appropriate list based on the current section
+                    if ("NOW SHOWING".equals(currentSection)) {
+                        nowShowingMovies.add(movie);
+                    } else if ("COMING SOON".equals(currentSection)) {
+                        comingSoonMovies.add(movie);
+                    }
                 }
             }
-        } catch (IOException e) {
-            e.printStackTrace();
         }
-        return movies;
+    } catch (IOException e) {
+        e.printStackTrace();
     }
 
+    // Store the lists in a map to return both sections
+    categorizedMovies.put("NOW SHOWING", nowShowingMovies);
+    categorizedMovies.put("COMING SOON", comingSoonMovies);
+
+    return categorizedMovies;
+}
 
 
     public static void showAdminScreen() {
@@ -59,12 +83,30 @@ public class AdminDashboard extends JFrame {
         moviePanel.setLayout(new BorderLayout());
         moviePanel.setBackground(new Color(128, 0, 0));
 
+        // Define the column names
+     
         String[] columnNames = {"Movie Name", "Description", "Poster Filename", "Cinema Number", "Directors", "Writers", "Stars"};
         DefaultTableModel movieTableModel = new DefaultTableModel(columnNames, 0);
-        List<Movie> movies = loadMoviesFromFile();
-        for (Movie movie : movies) {
-            movieTableModel.addRow(new Object[]{movie.getTitle(), movie.getDescription(), movie.getPosterFilename(), movie.getCinemaNumber(), movie.getDirector(), movie.getWriters(), movie.getStars()});
+
+        // Load movies from the file, specifically the "NOW SHOWING" section
+        Map<String, List<Movie>> categorizedMovies = loadMoviesFromFile();
+        List<Movie> nowShowingMovies = categorizedMovies.get("NOW SHOWING"); // Get only the NOW SHOWING movies
+
+        // Loop through each movie in the NOW SHOWING list and add it to the table
+        for (Movie movie : nowShowingMovies) {
+            movieTableModel.addRow(new Object[]{
+                movie.getTitle(),           // Movie Name
+                movie.getDescription(),     // Description
+                movie.getPosterFilename(),  // Poster Filename
+                movie.getCinemaNumber(),    // Cinema Number
+                movie.getDirector(),        // Directors
+                movie.getWriters(),         // Writers
+                movie.getStars()            // Stars
+            });
         }
+
+
+
 
         JTable movieTable = new JTable(movieTableModel);
         JScrollPane scrollPane = new JScrollPane(movieTable);
@@ -102,7 +144,7 @@ public class AdminDashboard extends JFrame {
         editButton.addActionListener(e -> {
             int selectedRow = movieTable.getSelectedRow();
             if (selectedRow != -1) {
-                Movie selectedMovie = movies.get(selectedRow);
+                Movie selectedMovie = nowShowingMovies.get(selectedRow);
                 showEditMovieForm(selectedMovie, movieTable);
             } else {
                 JOptionPane.showMessageDialog(adminFrame, "Please select a movie to edit.");
@@ -112,7 +154,7 @@ public class AdminDashboard extends JFrame {
         deleteButton.addActionListener(e -> {
             int selectedRow = movieTable.getSelectedRow();
             if (selectedRow != -1) {
-                Movie selectedMovie = movies.get(selectedRow);
+                Movie selectedMovie = nowShowingMovies.get(selectedRow);
                 int confirmation = JOptionPane.showConfirmDialog(adminFrame,
                         "Are you sure you want to delete the movie:\n" + 
                         "Title: " + selectedMovie.getTitle() + "\n" +
@@ -123,8 +165,8 @@ public class AdminDashboard extends JFrame {
                         "Stars: " +selectedMovie.getStars(),
                         "Delete Movie", JOptionPane.YES_NO_OPTION);
                 if (confirmation == JOptionPane.YES_OPTION) {
-                    movies.remove(selectedMovie);
-                    saveMoviesToFile(movies);
+                    nowShowingMovies.remove(selectedMovie);
+                    saveMoviesToFile(nowShowingMovies, categorizedMovies.get("COMING SOON"));
                     movieTableModel.removeRow(selectedRow);
                     updateMovieTable(movieTableModel);
                     adminFrame.dispose();  // Dispose of the admin dashboard window
@@ -150,7 +192,7 @@ public class AdminDashboard extends JFrame {
             trial.disposeInstance();
             trial.main(new String[]{});
         });
-s
+
         adminFrame.add(headerPanel, BorderLayout.NORTH);
         adminFrame.add(moviePanel, BorderLayout.CENTER);
         adminFrame.add(adminButtonPanel, BorderLayout.SOUTH);
@@ -202,7 +244,6 @@ s
 
     JLabel starsLabel = new JLabel("Stars:");
     JTextField starsField = new JTextField();
-
     JButton saveButton = new JButton("Save");
     saveButton.addActionListener(e -> {
         String title = titleField.getText();
@@ -211,33 +252,54 @@ s
         String directors = directorsField.getText();
         String writers = writersField.getText();
         String stars = starsField.getText();
-
+    
+        // Check if all fields are filled
         if (title.isEmpty() || description.isEmpty() || posterFilename.isEmpty() || cinemaField.getText().isEmpty() || directors.isEmpty() || writers.isEmpty() || stars.isEmpty()) {
             JOptionPane.showMessageDialog(addMovieFrame, "All fields are required!", "Error", JOptionPane.ERROR_MESSAGE);
             return;
         }
-
+    
         try {
+            // Parse the cinema number
             int cinemaNumber = Integer.parseInt(cinemaField.getText());
+    
+            // Create a new movie instance
             Movie newMovie = new Movie(title, description, posterFilename, cinemaNumber, directors, writers, stars);
-            List<Movie> movies = loadMoviesFromFile();
-            movies.add(newMovie);
-            saveMoviesToFile(movies);
-
+    
+            // Load the current list of movies (assuming it has sections like "NOW SHOWING")
+            Map<String, List<Movie>> categorizedMovies = loadMoviesFromFile();
+            List<Movie> nowShowingMovies = categorizedMovies.get("NOW SHOWING");  // If you're adding to NOW SHOWING
+            if (nowShowingMovies != null) {
+                nowShowingMovies.add(newMovie);
+            } else {
+                nowShowingMovies = new ArrayList<>();
+                nowShowingMovies.add(newMovie);
+                categorizedMovies.put("NOW SHOWING", nowShowingMovies);  // Make sure to put it back if it's the first addition
+            }
+    
+            // Save the updated movie list back to the file
+            saveMoviesToFile(categorizedMovies.get("NOW SHOWING"), categorizedMovies.get("COMING SOON"));
+    
+            // Show success message
             JOptionPane.showMessageDialog(addMovieFrame, "Movie Added Successfully!");
-
+    
+            // Update the movie table with the new data
             updateMovieTable((DefaultTableModel) movieTable.getModel());
+    
+            // Dispose of the current frame
             addMovieFrame.dispose();
             adminFrame.dispose(); // Dispose of the admin dashboard window
             showAdminScreen(); // Reload the Admin Dashboard
-
-            // Relaunch trial.java
+            
+            // Relaunch the trial screen
             trial.disposeInstance();
             trial.main(new String[]{});
+            
         } catch (NumberFormatException ex) {
             JOptionPane.showMessageDialog(addMovieFrame, "Cinema Number must be a valid number!", "Error", JOptionPane.ERROR_MESSAGE);
         }
     });
+    
 
     layout.setHorizontalGroup(
         layout.createParallelGroup(GroupLayout.Alignment.LEADING)
@@ -340,82 +402,84 @@ public static void showEditMovieForm(Movie movie, JTable movieTable) {
     });
 
     JButton saveButton = new JButton("Save Changes");
-    saveButton.addActionListener(e -> {
-        // Store the original movie title before editing
-        String originalTitle = movie.getTitle();
+saveButton.addActionListener(e -> {
+    // Store the original movie title before editing
+    String originalTitle = movie.getTitle();
 
-        // Update only the changed fields
-        boolean updated = false;
-        if (!titleField.getText().equals(movie.getTitle())) {
-            movie.setTitle(titleField.getText());
+    // Update only the changed fields
+    boolean updated = false;
+    if (!titleField.getText().equals(movie.getTitle())) {
+        movie.setTitle(titleField.getText());
+        updated = true;
+    }
+    if (!descriptionArea.getText().equals(movie.getDescription())) {
+        movie.setDescription(descriptionArea.getText());
+        updated = true;
+    }
+    if (!posterField.getText().equals(movie.getPosterFilename())) {
+        movie.setPosterFilename(posterField.getText());
+        updated = true;
+    }
+    if (!directorsField.getText().equals(movie.getDirector())) {
+        movie.setDirectors(directorsField.getText());
+        updated = true;
+    }
+    if (!writersField.getText().equals(movie.getWriters())) {
+        movie.setWriters(writersField.getText());
+        updated = true;
+    }
+    if (!starsField.getText().equals(movie.getStars())) {
+        movie.setStars(starsField.getText());
+        updated = true;
+    }
+    try {
+        int newCinemaNumber = Integer.parseInt(cinemaField.getText());
+        if (newCinemaNumber != movie.getCinemaNumber()) {
+            movie.setCinemaNumber(newCinemaNumber);
             updated = true;
         }
-        if (!descriptionArea.getText().equals(movie.getDescription())) {
-            movie.setDescription(descriptionArea.getText());
-            updated = true;
-        }
-        if (!posterField.getText().equals(movie.getPosterFilename())) {
-            movie.setPosterFilename(posterField.getText());
-            updated = true;
-        }
-        if (!directorsField.getText().equals(movie.getDirector())) {
-            movie.setDirectors(directorsField.getText());
-            updated = true;
-        }
-        if (!writersField.getText().equals(movie.getWriters())) {
-            movie.setWriters(writersField.getText());
-            updated = true;
-        }
-        if (!starsField.getText().equals(movie.getStars())) {
-            movie.setStars(starsField.getText());
-            updated = true;
-        }
-        try {
-            int newCinemaNumber = Integer.parseInt(cinemaField.getText());
-            if (newCinemaNumber != movie.getCinemaNumber()) {
-                movie.setCinemaNumber(newCinemaNumber);
-                updated = true;
-            }
 
-            if (updated) {
-                // Load existing movies
-                List<Movie> movies = loadMoviesFromFile();
+        if (updated) {
+            // Load the categorized movies (NOW SHOWING and COMING SOON)
+            Map<String, List<Movie>> categorizedMovies = loadMoviesFromFile();
+            List<Movie> nowShowingMovies = categorizedMovies.get("NOW SHOWING");
 
-                // Find the movie in the list and update it
-                for (int i = 0; i < movies.size(); i++) {
-                    if (movies.get(i).getTitle().equals(originalTitle)) {
-                        movies.set(i, movie);  // Replace old movie with updated one
-                        break;
-                    }
+            // Find and update the movie in the list
+            for (int i = 0; i < nowShowingMovies.size(); i++) {
+                if (nowShowingMovies.get(i).getTitle().equals(originalTitle)) {
+                    nowShowingMovies.set(i, movie);  // Replace old movie with updated one
+                    break;
                 }
-
-                // Save the updated movie list back to the file
-                saveMoviesToFile(movies);
-
-                // Show success message
-                JOptionPane.showMessageDialog(editMovieFrame, "Movie Edited Successfully!");
-
-                // Update the JTable with the new list of movies
-                updateMovieTable((DefaultTableModel) movieTable.getModel());
-
-                // Relaunch the Admin Dashboard with updated data
-                adminFrame.dispose();  // Dispose current admin frame
-                showAdminScreen();  // Relaunch the Admin Dashboard
-
-                // Reload the Trial class with the updated information
-                trial.disposeInstance();
-                trial.main(new String[]{});
-
-                // Close the Edit Movie form
-                editMovieFrame.dispose();
-            } else {
-                JOptionPane.showMessageDialog(editMovieFrame, "No changes were made to the movie.", "No Changes", JOptionPane.INFORMATION_MESSAGE);
             }
 
-        } catch (NumberFormatException ex) {
-            JOptionPane.showMessageDialog(editMovieFrame, "Cinema Number must be a valid number!", "Error", JOptionPane.ERROR_MESSAGE);
+            // Save the updated movie list back to the file
+            saveMoviesToFile(nowShowingMovies, categorizedMovies.get("COMING SOON"));
+
+            // Show success message
+            JOptionPane.showMessageDialog(editMovieFrame, "Movie Edited Successfully!");
+
+            // Update the JTable with the new list of movies
+            updateMovieTable((DefaultTableModel) movieTable.getModel());
+
+            // Relaunch the Admin Dashboard with updated data
+            adminFrame.dispose();  // Dispose current admin frame
+            showAdminScreen();  // Relaunch the Admin Dashboard
+
+            // Reload the Trial class with the updated information
+            trial.disposeInstance();
+            trial.main(new String[]{});
+
+            // Close the Edit Movie form
+            editMovieFrame.dispose();
+        } else {
+            JOptionPane.showMessageDialog(editMovieFrame, "No changes were made to the movie.", "No Changes", JOptionPane.INFORMATION_MESSAGE);
         }
-    });
+
+    } catch (NumberFormatException ex) {
+        JOptionPane.showMessageDialog(editMovieFrame, "Cinema Number must be a valid number!", "Error", JOptionPane.ERROR_MESSAGE);
+    }
+});
+
 
     // Layout code for adding components to the panel
     layout.setHorizontalGroup(
@@ -475,24 +539,96 @@ public static void showEditMovieForm(Movie movie, JTable movieTable) {
 }
 
     
-    public static void saveMoviesToFile(List<Movie> movies) {
+public static void saveMoviesToFile(List<Movie> nowShowingMovies, List<Movie> comingSoonMovies) {
+    try {
+        // Read the existing file content to preserve the "COMING SOON" section
+        List<String> fileLines = new ArrayList<>();
+        try (BufferedReader reader = new BufferedReader(new FileReader("movies.txt"))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                fileLines.add(line);
+            }
+        }
+
+        // Identify the indexes where the NOW SHOWING and COMING SOON sections begin
+        int nowShowingStartIndex = -1;
+        int comingSoonStartIndex = -1;
+        
+        for (int i = 0; i < fileLines.size(); i++) {
+            if (fileLines.get(i).equals("NOW SHOWING")) {
+                nowShowingStartIndex = i;
+            }
+            if (fileLines.get(i).equals("COMING SOON")) {
+                comingSoonStartIndex = i;
+            }
+        }
+
+        // Create a new list to store the updated file content
+        List<String> updatedLines = new ArrayList<>();
+
+        // Add the "NOW SHOWING" section
+        updatedLines.add("NOW SHOWING");
+        for (Movie movie : nowShowingMovies) {
+            updatedLines.add(movie.getTitle() + "|" + movie.getDescription() + "|" + movie.getPosterFilename() + "|"
+                    + movie.getCinemaNumber() + "|" + movie.getDirector() + "|" + movie.getWriters() + "|"
+                    + movie.getStars());
+        }
+
+        // Add the "COMING SOON" section, ensuring it stays intact
+        if (comingSoonStartIndex != -1) {
+            updatedLines.add("COMING SOON");
+            for (int i = comingSoonStartIndex + 1; i < fileLines.size(); i++) {
+                updatedLines.add(fileLines.get(i));
+            }
+        } else {
+            // If the "COMING SOON" section does not exist in the file, append it.
+            updatedLines.add("COMING SOON");
+            for (Movie movie : comingSoonMovies) {
+                updatedLines.add(movie.getTitle() + "|" + movie.getDescription() + "|" + movie.getPosterFilename() + "|"
+                        + movie.getCinemaNumber() + "|" + movie.getDirector() + "|" + movie.getWriters() + "|"
+                        + movie.getStars());
+            }
+        }
+
+        // Write the updated content back to the file
         try (BufferedWriter writer = new BufferedWriter(new FileWriter("movies.txt"))) {
-            for (Movie movie : movies) {
-                writer.write(movie.getTitle() + "|" + movie.getDescription() + "|" + movie.getPosterFilename() + "|" + movie.getCinemaNumber() + "|" + movie.getDirector() + "|" + movie.getWriters() + "|" + movie.getStars());
+            for (String line : updatedLines) {
+                writer.write(line);
                 writer.newLine();
             }
-        } catch (IOException e) {
-            e.printStackTrace();
         }
+
+    } catch (IOException e) {
+        e.printStackTrace();
     }
+}
+
+
+
     
-    public static void updateMovieTable(DefaultTableModel movieTableModel) {
-        List<Movie> movies = loadMoviesFromFile();
-        movieTableModel.setRowCount(0);  // Clear existing rows
-        for (Movie movie : movies) {
-            movieTableModel.addRow(new Object[]{movie.getTitle(), movie.getDescription(), movie.getPosterFilename(), movie.getCinemaNumber()});
-        }
+public static void updateMovieTable(DefaultTableModel movieTableModel) {
+    // Load only NOW SHOWING movies from the file
+    Map<String, List<Movie>> categorizedMovies = loadMoviesFromFile();
+    List<Movie> nowShowingMovies = categorizedMovies.get("NOW SHOWING");
+
+    // Clear existing rows from the table
+    movieTableModel.setRowCount(0);
+
+    // Add rows for each movie in the NOW SHOWING section
+    for (Movie movie : nowShowingMovies) {
+        movieTableModel.addRow(new Object[]{
+            movie.getTitle(),
+            movie.getDescription(),
+            movie.getPosterFilename(),
+            movie.getCinemaNumber(),
+            movie.getDirector(),
+            movie.getWriters(),
+            movie.getStars()
+        });
     }
+}
+
+
     
     
     
