@@ -90,19 +90,29 @@ public class Home extends JPanel {
         return panel;
     }
 
-    // Method to load movies from the movies.txt file
+    // Method to load movies from the movies.txt file, skipping "Coming Soon" section
     public static List<Movie> loadMoviesFromFile() {
         List<Movie> movies = new ArrayList<>();
+        boolean isComingSoonSection = false;
+        
         try (BufferedReader reader = new BufferedReader(new FileReader("movies.txt"))) {
             String line;
             while ((line = reader.readLine()) != null) {
+                // Skip the "Coming Soon" section and beyond
+                if (line.contains("Coming Soon")) {
+                    isComingSoonSection = true;
+                }
+
+                // If we are in the "Coming Soon" section, ignore the lines
+                if (isComingSoonSection) {
+                    continue; // Skip this line
+                }
+
                 String[] movieData = line.split("\\|");
-                if (movieData.length == 4) {
+                if (movieData.length >= 2) { // Ensure at least title and poster filename exist
                     String title = movieData[0].trim();
-                    String description = movieData[1].trim();
                     String posterFilename = movieData[2].trim();
-                    int cinemaNumber = Integer.parseInt(movieData[3].trim());
-                    Movie movie = new Movie(title, description, posterFilename, cinemaNumber);
+                    Movie movie = new Movie(title, posterFilename);
                     movies.add(movie);
                 }
             }
@@ -112,35 +122,37 @@ public class Home extends JPanel {
         return movies;
     }
 
-    // Movie class to represent a movie with a title, description, poster image filename, and cinema number
+    // Movie class to represent a movie with a title and poster image filename
     static class Movie {
         private String title;
-        private String description;
         private String posterFilename;
-        private int cinemaNumber;
 
-        public Movie(String title, String description, String posterFilename, int cinemaNumber) {
+        public Movie(String title, String posterFilename) {
             this.title = title;
-            this.description = description;
             this.posterFilename = posterFilename;
-            this.cinemaNumber = cinemaNumber;
         }
 
         public String getTitle() {
             return title;
         }
 
-        public String getDescription() {
-            return description;
-        }
-
         public String getPosterFilename() {
             return posterFilename;
         }
+    }
 
-        public int getCinemaNumber() {
-            return cinemaNumber;
-        }
+    // Main method to launch the application
+    public static void main(String[] args) {
+        // Set up the frame
+        JFrame frame = new JFrame("Cinema Cookie");
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.setSize(800, 600); // Set initial window size
+        frame.setLocationRelativeTo(null); // Center the window
+
+        // Add the Home panel to the frame
+        frame.add(new Home());
+
+        // Make the frame visible
+        frame.setVisible(true);
     }
 }
-

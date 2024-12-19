@@ -1,7 +1,5 @@
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -118,7 +116,7 @@ public class movieSelection extends JPanel {
     }
 
     private void readMoviesFromFile(List<Movie> nowShowing, List<Movie> comingSoon) {
-        try (BufferedReader reader = new BufferedReader(new FileReader("movie.txt"))) {
+        try (BufferedReader reader = new BufferedReader(new FileReader("movies.txt"))) {
             String line;
             List<Movie> currentList = null;
 
@@ -129,16 +127,17 @@ public class movieSelection extends JPanel {
                     currentList = comingSoon;
                 } else if (!line.trim().isEmpty()) {
                     String[] parts = line.split("\\|");
-                    if (parts.length == 6) {
+                    if (parts.length == 7) {
                         String title = parts[0].trim();
                         String description = parts[1].trim();
                         String posterPath = parts[2].trim();
-                        String director = parts[3].trim();
-                        String writers = parts[4].trim();
-                        String stars = parts[5].trim();
+                        String cinemaNumber = parts[3].trim();
+                        String directors = parts[4].trim();
+                        String writers = parts[5].trim();
+                        String stars = parts[6].trim();
 
                         if (new File(posterPath).exists()) {
-                            currentList.add(new Movie(title, description, posterPath, director, writers, stars));
+                            currentList.add(new Movie(title, description, posterPath, cinemaNumber, directors, writers, stars));
                         } else {
                             System.out.println("Skipping movie with invalid poster path: " + title);
                         }
@@ -168,12 +167,17 @@ public class movieSelection extends JPanel {
         JLabel posterLabel = new JLabel(resizeImageIcon(movie.getPosterPath(), 400, 500));
         panel.add(posterLabel, BorderLayout.CENTER);
 
-        // Description
-        JTextArea descriptionArea = new JTextArea(movie.getDescription());
-        descriptionArea.setEditable(false);
-        descriptionArea.setWrapStyleWord(true);
-        descriptionArea.setLineWrap(true);
-        panel.add(new JScrollPane(descriptionArea), BorderLayout.SOUTH);
+        // Details
+        JTextArea detailsArea = new JTextArea();
+        detailsArea.setEditable(false);
+        detailsArea.setWrapStyleWord(true);
+        detailsArea.setLineWrap(true);
+        detailsArea.setText("Description: " + movie.getDescription() + "\n\n" +
+                            "Cinema: " + movie.getCinemaNumber() + "\n\n" +
+                            "Director(s): " + movie.getDirector() + "\n\n" +
+                            "Writer(s): " + movie.getWriters() + "\n\n" +
+                            "Stars: " + movie.getStars());
+        panel.add(new JScrollPane(detailsArea), BorderLayout.SOUTH);
 
         detailsFrame.add(panel);
         detailsFrame.setVisible(true);
@@ -190,14 +194,16 @@ public class movieSelection extends JPanel {
         private final String title;
         private final String description;
         private final String posterPath;
+        private final String cinemaNumber;
         private final String director;
         private final String writers;
         private final String stars;
 
-        public Movie(String title, String description, String posterPath, String director, String writers, String stars) {
+        public Movie(String title, String description, String posterPath, String cinemaNumber, String director, String writers, String stars) {
             this.title = title;
             this.description = description;
             this.posterPath = posterPath;
+            this.cinemaNumber = cinemaNumber;
             this.director = director;
             this.writers = writers;
             this.stars = stars;
@@ -213,6 +219,10 @@ public class movieSelection extends JPanel {
 
         public String getPosterPath() {
             return posterPath;
+        }
+
+        public String getCinemaNumber() {
+            return cinemaNumber;
         }
 
         public String getDirector() {

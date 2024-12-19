@@ -123,10 +123,6 @@ public static JPanel createMoviesPanel() {
     return moviesPanel;
 }
 
-
-
-
-
     public static JPanel createSnackBarPanel() {
         JPanel snackBarPanel = new JPanel();
         snackBarPanel.setBackground(Color.WHITE);
